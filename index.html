@@ -46,7 +46,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 // កំណត់ព័ត៌មាន Telegram
-const TELEGRAM_BOT_TOKEN = "8242266919:AAGE6uMJ_-UvM-3KBZkJVFhJyTLvcTVW5tQ";
+const TELEGRAM_BOT_TOKEN = "8146471538:AAFXcPDUE1MylUbiZUMvgh1zhfY-NWw3QU8";
 const TELEGRAM_CHAT_ID = "1346632543";
 
 const OFFICIAL_IN = "07:15";
@@ -81,27 +81,39 @@ function updateTime(){
 updateTime();
 setInterval(updateTime,60000);
 
-// មុខងារផ្ញើសារទៅ Telegram
+// មុខងារផ្ញើសារទៅ Telegram - កែប្រែត្រឹមត្រូវ
 async function sendToTelegram(message) {
-    const url = `https://t.me/my_staff_att_2026_bot`;
-    const params = {
-        chat_id: TELEGRAM_CHAT_ID,
-        text: message,
-        parse_mode: "HTML"
-    };
-
+    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    
     try {
-        await fetch(url, {
+        const response = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(params)
+            body: JSON.stringify({
+                chat_id: TELEGRAM_CHAT_ID,
+                text: message,
+                parse_mode: "HTML"
+            })
         });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            alert("Telegram Error: " + data.description);
+            console.error("Detail:", data);
+            return false;
+        } else {
+            console.log("Success:", data);
+            return true;
+        }
     } catch (error) {
-        console.error("Error sending to Telegram:", error);
+        alert("Network Error: មិនអាចភ្ជាប់ទៅ Telegram បានទេ!");
+        console.error("Fetch Error:", error);
+        return false;
     }
 }
 
-function processAttendance() {
+async function processAttendance() {
     const name = document.getElementById("name").value;
     const role = document.getElementById("role").value;
     const type = document.getElementById("type").value;
@@ -114,13 +126,13 @@ function processAttendance() {
     }
 
     // ១. បង្កើតអត្ថបទសម្រាប់ QR និង Telegram
-    let displayText = `<b>Attendance Report</b>\n`;
-    displayText += `👤 Name: ${name}\n`;
-    displayText += `💼 Role: ${role}\n`;
-    displayText += `Status: ${type === 'checkin' ? '✅ Check-in' : '🚪 Check-out'}\n`;
-    displayText += `📅 Date: ${date}\n`;
-    displayText += `🕒 Time: ${time}`;
-    if(reason) displayText += `\n⚠️ Reason: ${reason}`;
+    let displayText = `<b>📋 Attendance Report</b>\n\n`;
+    displayText += `👤 <b>Name:</b> ${name}\n`;
+    displayText += `💼 <b>Role:</b> ${role}\n`;
+    displayText += `📊 <b>Status:</b> ${type === 'checkin' ? '🟢 Check-in' : '🔴 Check-out'}\n`;
+    displayText += `📅 <b>Date:</b> ${date}\n`;
+    displayText += `🕒 <b>Time:</b> ${time}`;
+    if(reason) displayText += `\n⚠️ <b>Reason:</b> ${reason}`;
 
     // ២. បង្កើត QR Code
     let qrText = `Attendance\nName: ${name}\nRole: ${role}\nType: ${type}\nDate: ${date}\nTime: ${time}`;
@@ -137,38 +149,11 @@ function processAttendance() {
     });
 
     // ៣. ផ្ញើទៅ Telegram
-    sendToTelegram(displayText);
-    alert("ទិន្នន័យត្រូវបានបញ្ជូនទៅ Telegram និងបង្កើត QR រួចរាល់!");
-}
-async function sendToTelegram(message) {
-    const url = `https://t.me/my_staff_att_2026_bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-    
-    try {
-        const response = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                chat_id: TELEGRAM_CHAT_ID,
-                text: message,
-                parse_mode: "HTML"
-            })
-        });
-
-        const data = await response.json();
-        
-        if (!response.ok) {
-            // បើផ្ញើមិនចេញ វានឹងប្រាប់ពីមូលហេតុ
-            alert("Telegram Error: " + data.description);
-            console.error("Detail:", data);
-        } else {
-            console.log("Success:", data);
-        }
-    } catch (error) {
-        alert("Network Error: មិនអាចភ្ជាប់ទៅ Telegram បានទេ!");
-        console.error("Fetch Error:", error);
+    const success = await sendToTelegram(displayText);
+    if(success) {
+        alert("✅ ទិន្នន័យត្រូវបានបញ្ជូនទៅ Telegram និងបង្កើត QR រួចរាល់!");
     }
 }
 </script>
 </body>
 </html>
-
