@@ -2,37 +2,65 @@
 <html lang="km">
 <head>
     <meta charset="UTF-8">
-    <title>Staff Attendance</title>
+    <title>Staff Attendance System</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body { font-family: Arial,"Noto Sans Khmer",sans-serif; background:#f2f4f7; display:flex; justify-content:center; padding:20px; }
-        .card { background:#fff; max-width:380px; padding:20px; border-radius:14px; box-shadow:0 10px 25px rgba(0,0,0,.1); }
-        h2 { text-align:center; margin-bottom:14px }
-        label { font-size:14px; font-weight:bold; }
-        input, select, textarea { width:100%; padding:10px; margin:6px 0 12px; border-radius:8px; border:1px solid #ccc; font-size:14px; box-sizing:border-box; }
-        textarea { display:none; height:60px; }
-        .time-box { background:#eef2ff; padding:10px; border-radius:8px; text-align:center; font-weight:bold; margin-bottom:12px; }
-        button { width:100%; padding:12px; background:#2563eb; color:#fff; border:none; border-radius:10px; font-size:16px; cursor:pointer; }
-        button:active { background:#1e40af; }
-        #qrcode { display:flex; justify-content:center; margin-top:10px; }
+        .card { background:#fff; width:100%; max-width:400px; padding:25px; border-radius:16px; box-shadow:0 12px 30px rgba(0,0,0,.15); }
+        h2 { text-align:center; color: #1e40af; margin-bottom:20px; }
+        label { font-size:14px; font-weight:bold; color: #374151; }
+        input, select, textarea { width:100%; padding:12px; margin:8px 0 16px; border-radius:10px; border:1px solid #d1d5db; font-size:15px; box-sizing:border-box; outline:none; transition: 0.3s; }
+        input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        textarea { display:none; height:70px; resize: none; }
+        .time-box { background:#eff6ff; padding:12px; border-radius:10px; text-align:center; font-weight:bold; color: #1e40af; border: 1px dashed #bfdbfe; margin-bottom:16px; }
+        button { width:100%; padding:14px; background:#2563eb; color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer; transition: 0.3s; }
+        button:hover { background:#1e40af; }
+        #qrcode { display:flex; justify-content:center; margin-top:20px; }
+        .found-input { border: 2px solid #10b981 !important; background-color: #f0fdf4; }
     </style>
 </head>
 <body>
+
 <div class="card">
-    <h2>📋 Staff Attendance</h2>
-    <label>ឈ្មោះពេញ</label>
-    <input id="name" placeholder="បញ្ចូលឈ្មោះ">
+    <h2>📋 វត្តមានបុគ្គលិក</h2>
+    
+    <label>ស្វែងរកឈ្មោះពេញ</label>
+    <input id="name" placeholder="វាយឈ្មោះរបស់អ្នក..." list="staffList" oninput="autoFillRole()">
+    <datalist id="staffList">
+        <option value="ប៉ែន សំអូន">
+        <option value="អេង ស្រីនីន">
+        <option value="មុំ សុផុន">
+        <option value="អឿន កាណាល់">
+        <option value="មុឹង ស្រីនីត">
+        <option value="ប៉ូ សូឪន">
+        <option value="ជុក ហ័ន">
+        <option value="រិន សិរីភាព">
+        <option value="ប៊ន់ ឆដា">
+        <option value="ចំណាន វាសនា">
+        <option value="សុខ ស្រីពេជ្រ">
+        <option value="ហូ វីហ្សា">
+        <option value="ឧន ស្រីណែត">
+        <option value="លាង សុភារី">
+        <option value="រ៉េត មួយស៊ាំង">
+        <option value="narei">
+        <option value="chanthoeurn Chhoeurn">
+    </datalist>
+
     <label>តួនាទី</label>
-    <input id="role" placeholder="បញ្ចូលតួនាទី">
-    <label>ប្រភេទ</label>
+    <input id="role" placeholder="តួនាទីនឹងបង្ហាញទីនេះ" readonly>
+
+    <label>ប្រភេទវត្តមាន</label>
     <select id="type" onchange="checkTime()">
-        <option value="checkin">Check-in</option>
-        <option value="checkout">Check-out</option>
+        <option value="checkin">ចូលធ្វើការ (Check-in)</option>
+        <option value="checkout">ចេញពីធ្វើការ (Check-out)</option>
     </select>
-    <div class="time-box" id="timeBox"></div>
-    <label id="reasonLabel" style="display:none;color:red;">មូលហេតុ (យឺត/ចេញមុន)</label>
-    <textarea id="reason" placeholder="សូមបំពេញមូលហេតុ"></textarea>
-    <button onclick="processAttendance()">Send to Telegram</button>
+
+    <div class="time-box" id="timeBox">🕒 --:-- | 📅 --/--/----</div>
+
+    <label id="reasonLabel" style="display:none;color: #dc2626;">មូលហេតុ (យឺត/ចេញមុន)</label>
+    <textarea id="reason" placeholder="សូមបញ្ជាក់មូលហេតុ..."></textarea>
+
+    <button onclick="processAttendance()">ផ្ញើវត្តមានទៅ Telegram</button>
     <div id="qrcode"></div>
 </div>
 
@@ -42,6 +70,41 @@ const TELEGRAM_BOT_TOKEN = "8242266919:AAGE6uMJ_-UvM-3KBZkJVFhJyTLvcTVW5tQ";
 const TELEGRAM_CHAT_ID = "1346632543";
 const OFFICIAL_IN = "07:15";
 const OFFICIAL_OUT = "17:15";
+
+// ទិន្នន័យបុគ្គលិកដែលដកស្រង់ចេញពីរូបភាព
+const staffDatabase = {
+    "ប៉ែន សំអូន": "នាយក",
+    "អេង ស្រីនីន": "អ្នកផ្តល់ព័ត៌មាន",
+    "មុំ សុផុន": "អ្នកអនាម័យ",
+    "អៀង កាណាល់": "គ្រូទី២",
+    "ម៉ឹង ស្រីនីត": "គ្រូទី៤ ទី៥",
+    "ប៉ូ សុឪន": "គ្រូទី៣",
+    "ជុក ហ័ន": "មត្តេយ្យខ្ពស់",
+    "រិន សិរីភាព": "មត្តេយ្យមធ្យម",
+    "ប៊ន់ ឆដា": "មត្តេយ្យទាប",
+    "ចំណាន វាសនា": "found1",
+    "សុខ ស្រីពេជ្រ": "nursery",
+    "ហូ វីហ្សា": "TA nursery",
+    "ឧន ស្រីណែត": "level1",
+    "លាង សុភារី": "IT",
+    "រ៉េត មួយស៊ាំង": "ភាសាចិន",
+    "narei": "found2",
+    "chanthoeurn Chhoeurn": "IT"
+};
+
+function autoFillRole() {
+    const nameInput = document.getElementById("name");
+    const roleInput = document.getElementById("role");
+    const val = nameInput.value.trim();
+
+    if (staffDatabase[val]) {
+        roleInput.value = staffDatabase[val];
+        nameInput.classList.add("found-input");
+    } else {
+        roleInput.value = "";
+        nameInput.classList.remove("found-input");
+    }
+}
 
 function getNow(){
     const now = new Date();
@@ -56,8 +119,10 @@ function checkTime(){
     const reason = document.getElementById("reason");
     const label = document.getElementById("reasonLabel");
     let needReason = false;
+    
     if(type==="checkin" && time > OFFICIAL_IN) needReason=true;
     if(type==="checkout" && time < OFFICIAL_OUT) needReason=true;
+    
     reason.style.display = needReason ? "block" : "none";
     label.style.display = needReason ? "block" : "none";
 }
@@ -68,7 +133,7 @@ function updateTime(){
     checkTime();
 }
 updateTime();
-setInterval(updateTime,60000);
+setInterval(updateTime, 60000);
 
 async function sendToTelegram(message) {
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
@@ -82,16 +147,8 @@ async function sendToTelegram(message) {
                 parse_mode: "HTML"
             })
         });
-        const data = await response.json();
-        if (!response.ok) {
-            alert("Telegram Error: " + data.description);
-            return false;
-        }
-        return true;
-    } catch (error) {
-        alert("Network Error!");
-        return false;
-    }
+        return response.ok;
+    } catch (error) { return false; }
 }
 
 async function processAttendance() {
@@ -102,35 +159,28 @@ async function processAttendance() {
     const {time, date} = getNow();
 
     if(!name || !role){
-        alert("សូមបំពេញឈ្មោះ និង តួនាទី");
+        alert("សូមវាយឈ្មោះឱ្យបានត្រឹមត្រូវក្នុងបញ្ជី!");
         return;
     }
 
-    let displayText = `📋 <b>Attendance Report</b>\n\n`;
-    displayText += `👤 <b>Name:</b> ${name}\n`;
-    displayText += `💼 <b>Role:</b> ${role}\n`;
-    displayText += `📊 <b>Status:</b> ${type === 'checkin' ? '🟢 Check-in' : '🔴 Check-out'}\n`;
-    displayText += `📅 <b>Date:</b> ${date}\n`;
-    displayText += `🕒 <b>Time:</b> ${time}`;
-    if(reason) displayText += `\n⚠️ <b>Reason:</b> ${reason}`;
-
-    let qrText = `Attendance\nName: ${name}\nRole: ${role}\nType: ${type}\nDate: ${date}\nTime: ${time}`;
-    if(reason) qrText += `\nReason: ${reason}`;
+    let msg = `📋 <b>របាយការណ៍វត្តមាន</b>\n\n`;
+    msg += `👤 <b>ឈ្មោះ:</b> ${name}\n`;
+    msg += `💼 <b>តួនាទី:</b> ${role}\n`;
+    msg += `📊 <b>ស្ថានភាព:</b> ${type === 'checkin' ? '🟢 ចូលធ្វើការ' : '🔴 ចេញពីធ្វើការ'}\n`;
+    msg += `📅 <b>កាលបរិច្ឆេទ:</b> ${date}\n`;
+    msg += `🕒 <b>ម៉ោង:</b> ${time}`;
+    if(reason) msg += `\n⚠️ <b>មូលហេតុ:</b> ${reason}`;
 
     document.getElementById("qrcode").innerHTML="";
     new QRCode(document.getElementById("qrcode"), {
-        text: qrText,
-        width: 200,
-        height: 200,
-        colorDark: "#2563eb",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
+        text: `Staff: ${name}\nRole: ${role}\nTime: ${time}\nStatus: ${type}`,
+        width: 150,
+        height: 150
     });
 
-    const success = await sendToTelegram(displayText);
-    if(success) {
-        alert("✅ បានផ្ញើទៅ Telegram រួចរាល់!");
-    }
+    const success = await sendToTelegram(msg);
+    if(success) alert("✅ រួចរាល់! ទិន្នន័យត្រូវបានផ្ញើទៅកាន់ Telegram។");
+    else alert("❌ បរាជ័យ! សូមពិនិត្យអ៊ីនធឺណិតរបស់អ្នក។");
 }
 </script>
 </body>
