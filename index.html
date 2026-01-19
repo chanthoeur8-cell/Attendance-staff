@@ -2,53 +2,44 @@
 <html lang="km">
 <head>
     <meta charset="UTF-8">
-    <title>Staff Attendance with QR</title>
+    <title>Staff Attendance</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: Arial,"Noto Sans Khmer",sans-serif; background:#f2f4f7; display:flex; justify-content:center; align-items:flex-start; padding-top:20px; }
-        .card { background:#fff; width:100%; max-width:380px; padding:20px; border-radius:14px; box-shadow:0 10px 25px rgba(0,0,0,.1); margin-bottom:20px; }
+        body { font-family: Arial,"Noto Sans Khmer",sans-serif; background:#f2f4f7; display:flex; justify-content:center; padding:20px; }
+        .card { background:#fff; max-width:380px; padding:20px; border-radius:14px; box-shadow:0 10px 25px rgba(0,0,0,.1); }
         h2 { text-align:center; margin-bottom:14px }
-        label { font-size:14px; font-weight: bold; }
-        input, select, textarea { width:100%; padding:10px; margin:6px 0 12px; border-radius:8px; border:1px solid #ccc; font-size:14px; box-sizing: border-box; }
-        textarea { display:none; height: 60px; }
+        label { font-size:14px; font-weight:bold; }
+        input, select, textarea { width:100%; padding:10px; margin:6px 0 12px; border-radius:8px; border:1px solid #ccc; font-size:14px; box-sizing:border-box; }
+        textarea { display:none; height:60px; }
         .time-box { background:#eef2ff; padding:10px; border-radius:8px; text-align:center; font-weight:bold; margin-bottom:12px; }
-        button { width:100%; padding:12px; background:#2563eb; color:#fff; border:none; border-radius:10px; font-size:16px; margin-bottom:10px; cursor: pointer; }
-        button:active { background: #1e40af; }
+        button { width:100%; padding:12px; background:#2563eb; color:#fff; border:none; border-radius:10px; font-size:16px; cursor:pointer; }
+        button:active { background:#1e40af; }
         #qrcode { display:flex; justify-content:center; margin-top:10px; }
     </style>
 </head>
 <body>
 <div class="card">
     <h2>📋 Staff Attendance</h2>
-
     <label>ឈ្មោះពេញ</label>
-    <input id="name" placeholder="បញ្ចូលឈ្មោះ" required>
-
+    <input id="name" placeholder="បញ្ចូលឈ្មោះ">
     <label>តួនាទី</label>
-    <input id="role" placeholder="បញ្ចូលតួនាទី" required>
-
+    <input id="role" placeholder="បញ្ចូលតួនាទី">
     <label>ប្រភេទ</label>
     <select id="type" onchange="checkTime()">
         <option value="checkin">Check-in</option>
         <option value="checkout">Check-out</option>
     </select>
-
     <div class="time-box" id="timeBox"></div>
-
-    <label id="reasonLabel" style="display:none; color:red;">មូលហេតុ (យឺត/ចេញមុន)</label>
+    <label id="reasonLabel" style="display:none;color:red;">មូលហេតុ (យឺត/ចេញមុន)</label>
     <textarea id="reason" placeholder="សូមបំពេញមូលហេតុ"></textarea>
-
-    <button onclick="processAttendance()">Generate QR & Send to Telegram</button>
-
+    <button onclick="processAttendance()">Send to Telegram</button>
     <div id="qrcode"></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-// កំណត់ព័ត៌មាន Telegram
 const TELEGRAM_BOT_TOKEN = "8242266919:AAGE6uMJ_-UvM-3KBZkJVFhJyTLvcTVW5tQ";
 const TELEGRAM_CHAT_ID = "1346632543";
-
 const OFFICIAL_IN = "07:15";
 const OFFICIAL_OUT = "17:15";
 
@@ -64,11 +55,9 @@ function checkTime(){
     const type = document.getElementById("type").value;
     const reason = document.getElementById("reason");
     const label = document.getElementById("reasonLabel");
-
     let needReason = false;
     if(type==="checkin" && time > OFFICIAL_IN) needReason=true;
     if(type==="checkout" && time < OFFICIAL_OUT) needReason=true;
-
     reason.style.display = needReason ? "block" : "none";
     label.style.display = needReason ? "block" : "none";
 }
@@ -81,10 +70,8 @@ function updateTime(){
 updateTime();
 setInterval(updateTime,60000);
 
-// មុខងារផ្ញើសារទៅ Telegram - កែប្រែត្រឹមត្រូវ
 async function sendToTelegram(message) {
-    const url = `https://t.me/my_staff_att_2026_bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-    
+    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     try {
         const response = await fetch(url, {
             method: "POST",
@@ -95,20 +82,14 @@ async function sendToTelegram(message) {
                 parse_mode: "HTML"
             })
         });
-
         const data = await response.json();
-        
         if (!response.ok) {
             alert("Telegram Error: " + data.description);
-            console.error("Detail:", data);
             return false;
-        } else {
-            console.log("Success:", data);
-            return true;
         }
+        return true;
     } catch (error) {
-        alert("Network Error: មិនអាចភ្ជាប់ទៅ Telegram បានទេ!");
-        console.error("Fetch Error:", error);
+        alert("Network Error!");
         return false;
     }
 }
@@ -125,8 +106,7 @@ async function processAttendance() {
         return;
     }
 
-    // ១. បង្កើតអត្ថបទសម្រាប់ QR និង Telegram
-    let displayText = `<b>📋 Attendance Report</b>\n\n`;
+    let displayText = `📋 <b>Attendance Report</b>\n\n`;
     displayText += `👤 <b>Name:</b> ${name}\n`;
     displayText += `💼 <b>Role:</b> ${role}\n`;
     displayText += `📊 <b>Status:</b> ${type === 'checkin' ? '🟢 Check-in' : '🔴 Check-out'}\n`;
@@ -134,7 +114,6 @@ async function processAttendance() {
     displayText += `🕒 <b>Time:</b> ${time}`;
     if(reason) displayText += `\n⚠️ <b>Reason:</b> ${reason}`;
 
-    // ២. បង្កើត QR Code
     let qrText = `Attendance\nName: ${name}\nRole: ${role}\nType: ${type}\nDate: ${date}\nTime: ${time}`;
     if(reason) qrText += `\nReason: ${reason}`;
 
@@ -148,13 +127,11 @@ async function processAttendance() {
         correctLevel: QRCode.CorrectLevel.H
     });
 
-    // ៣. ផ្ញើទៅ Telegram
     const success = await sendToTelegram(displayText);
     if(success) {
-        alert("✅ ទិន្នន័យត្រូវបានបញ្ជូនទៅ Telegram និងបង្កើត QR រួចរាល់!");
+        alert("✅ បានផ្ញើទៅ Telegram រួចរាល់!");
     }
 }
 </script>
 </body>
 </html>
-
