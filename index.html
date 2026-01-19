@@ -46,7 +46,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 // កំណត់ព័ត៌មាន Telegram
-const TELEGRAM_BOT_TOKEN = "8146471538:AAFXcPDUE1MylUbiZUMvgh1zhfY-NWw3QU8";
+const TELEGRAM_BOT_TOKEN = "8242266919:AAGE6uMJ_-UvM-3KBZkJVFhJyTLvcTVW5tQ";
 const TELEGRAM_CHAT_ID = "1346632543";
 
 const OFFICIAL_IN = "07:15";
@@ -83,7 +83,7 @@ setInterval(updateTime,60000);
 
 // មុខងារផ្ញើសារទៅ Telegram - កែប្រែត្រឹមត្រូវ
 async function sendToTelegram(message) {
-    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    const url = `https://t.me/my_staff_att_2026_bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     
     try {
         const response = await fetch(url, {
@@ -157,3 +157,4 @@ async function processAttendance() {
 </script>
 </body>
 </html>
+
