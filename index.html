@@ -31,8 +31,8 @@
         <option value="អេង ស្រីនីន">
         <option value="មុំ សុផុន">
         <option value="អឿន កាណាល់">
-        <option value="មុឹង ស្រីនីត">
-        <option value="ប៉ូ សូឪន">
+        <option value="ម៉ឹង ស្រីនីត">
+        <option value="ប៉ូ សុខន">
         <option value="ជុក ហ័ន">
         <option value="រិន សិរីភាព">
         <option value="ប៊ន់ ឆដា">
@@ -60,25 +60,25 @@
     <label id="reasonLabel" style="display:none;color: #dc2626;">មូលហេតុ (យឺត/ចេញមុន)</label>
     <textarea id="reason" placeholder="សូមបញ្ជាក់មូលហេតុ..."></textarea>
 
-    <button onclick="processAttendance()">ផ្ញើវត្តមានទៅ Telegram</button>
+    <button id="submitBtn" onclick="processAttendance()">ផ្ញើវត្តមានទៅ Telegram</button>
     <div id="qrcode"></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 const TELEGRAM_BOT_TOKEN = "8242266919:AAGE6uMJ_-UvM-3KBZkJVFhJyTLvcTVW5tQ";
-const TELEGRAM_CHAT_ID = "-1003584563383";
+const TELEGRAM_CHAT_ID = "-1003584563383"; // លេខ ID ថ្មីដែលអ្នកបានផ្ញើមក
 const OFFICIAL_IN = "07:15";
 const OFFICIAL_OUT = "17:15";
 
-// ទិន្នន័យបុគ្គលិកដែលដកស្រង់ចេញពីរូបភាព
+// ទិន្នន័យបុគ្គលិកដែលបានកែសម្រួលអក្ខរាវិរុទ្ធឱ្យត្រូវជាមួយ Datalist
 const staffDatabase = {
     "ប៉ែន សំអូន": "នាយក",
     "អេង ស្រីនីន": "អ្នកផ្តល់ព័ត៌មាន",
     "មុំ សុផុន": "អ្នកអនាម័យ",
     "អឿន កាណាល់": "គ្រូទី២",
     "ម៉ឹង ស្រីនីត": "គ្រូទី៤ ទី៥",
-    "ប៉ូ សុឪន": "គ្រូទី៣",
+    "ប៉ូ សុខន": "គ្រូទី៣",
     "ជុក ហ័ន": "មត្តេយ្យខ្ពស់",
     "រិន សិរីភាព": "មត្តេយ្យមធ្យម",
     "ប៊ន់ ឆដា": "មត្តេយ្យទាប",
@@ -119,10 +119,8 @@ function checkTime(){
     const reason = document.getElementById("reason");
     const label = document.getElementById("reasonLabel");
     let needReason = false;
-    
     if(type==="checkin" && time > OFFICIAL_IN) needReason=true;
     if(type==="checkout" && time < OFFICIAL_OUT) needReason=true;
-    
     reason.style.display = needReason ? "block" : "none";
     label.style.display = needReason ? "block" : "none";
 }
@@ -147,8 +145,16 @@ async function sendToTelegram(message) {
                 parse_mode: "HTML"
             })
         });
-        return response.ok;
-    } catch (error) { return false; }
+        const result = await response.json();
+        if(!response.ok) {
+            alert("Telegram Error: " + result.description);
+            return false;
+        }
+        return true;
+    } catch (error) { 
+        alert("Network Error: " + error);
+        return false; 
+    }
 }
 
 async function processAttendance() {
@@ -159,9 +165,13 @@ async function processAttendance() {
     const {time, date} = getNow();
 
     if(!name || !role){
-        alert("សូមវាយឈ្មោះឱ្យបានត្រឹមត្រូវក្នុងបញ្ជី!");
+        alert("សូមជ្រើសរើសឈ្មោះឱ្យបានត្រឹមត្រូវពីបញ្ជី (ឱ្យលោតតួនាទីសិន)!");
         return;
     }
+
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    btn.innerText = "កំពុងផ្ញើ...";
 
     let msg = `📋 <b>របាយការណ៍វត្តមាន</b>\n\n`;
     msg += `👤 <b>ឈ្មោះ:</b> ${name}\n`;
@@ -171,21 +181,19 @@ async function processAttendance() {
     msg += `🕒 <b>ម៉ោង:</b> ${time}`;
     if(reason) msg += `\n⚠️ <b>មូលហេតុ:</b> ${reason}`;
 
-    document.getElementById("qrcode").innerHTML="";
-    new QRCode(document.getElementById("qrcode"), {
-        text: `Staff: ${name}\nRole: ${role}\nTime: ${time}\nStatus: ${type}`,
-        width: 150,
-        height: 150
-    });
-
     const success = await sendToTelegram(msg);
-    if(success) alert("✅ រួចរាល់! ទិន្នន័យត្រូវបានផ្ញើទៅកាន់ Telegram។");
-    else alert("❌ បរាជ័យ! សូមពិនិត្យអ៊ីនធឺណិតរបស់អ្នក។");
+    if(success) {
+        alert("✅ រួចរាល់! វត្តមានត្រូវបានផ្ញើទៅ Telegram។");
+        document.getElementById("qrcode").innerHTML="";
+        new QRCode(document.getElementById("qrcode"), {
+            text: `Staff: ${name}, Time: ${time}`,
+            width: 120, height: 120
+        });
+    }
+
+    btn.disabled = false;
+    btn.innerText = "ផ្ញើវត្តមានទៅ Telegram";
 }
 </script>
 </body>
 </html>
-
-
-
-
