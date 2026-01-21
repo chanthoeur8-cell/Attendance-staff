@@ -2,198 +2,163 @@
 <html lang="km">
 <head>
     <meta charset="UTF-8">
-    <title>Staff Attendance System</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ប្រព័ន្ធស្កែនវត្តមាន - 1TUEK.COM</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { font-family: Arial,"Noto Sans Khmer",sans-serif; background:#f2f4f7; display:flex; justify-content:center; padding:20px; }
-        .card { background:#fff; width:100%; max-width:400px; padding:25px; border-radius:16px; box-shadow:0 12px 30px rgba(0,0,0,.15); }
-        h2 { text-align:center; color: #1e40af; margin-bottom:20px; }
-        label { font-size:14px; font-weight:bold; color: #374151; }
-        input, select, textarea { width:100%; padding:12px; margin:8px 0 16px; border-radius:10px; border:1px solid #d1d5db; font-size:15px; box-sizing:border-box; outline:none; transition: 0.3s; }
-        input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-        textarea { display:none; height:70px; resize: none; }
-        .time-box { background:#eff6ff; padding:12px; border-radius:10px; text-align:center; font-weight:bold; color: #1e40af; border: 1px dashed #bfdbfe; margin-bottom:16px; }
-        button { width:100%; padding:14px; background:#2563eb; color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer; transition: 0.3s; }
-        button:hover { background:#1e40af; }
-        #qrcode { display:flex; justify-content:center; margin-top:20px; }
-        .found-input { border: 2px solid #10b981 !important; background-color: #f0fdf4; }
+        body { font-family: 'Khmer OS Battambang', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f4f7f6; margin: 0; }
+        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 95%; max-width: 400px; text-align: center; }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 14px; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; margin-top: 10px; }
+        .btn-checkin { background-color: #28a745; color: white; }
+        .btn-checkout { background-color: #dc3545; color: white; }
+        .btn-send { background-color: #6f42c1; color: white; }
+        .hidden { display: none !important; }
+        .user-badge { background: #e9ecef; padding: 15px; border-radius: 15px; margin-bottom: 20px; font-weight: bold; color: #1e40af; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>📋 វត្តមានបុគ្គលិក</h2>
+<div class="container">
+    <h2 id="title">ស្កែនវត្តមាន</h2>
     
-    <label>ស្វែងរកឈ្មោះពេញ</label>
-    <input id="name" placeholder="វាយឈ្មោះរបស់អ្នក..." list="staffList" oninput="autoFillRole()">
-    <datalist id="staffList">
-        <option value="ប៉ែន សំអូន">
-        <option value="អេង ស្រីនីន">
-        <option value="មុំ សុផុន">
-        <option value="អឿន កាណាល់">
-        <option value="ម៉ឹង ស្រីនីត">
-        <option value="ប៉ូ សុខន">
-        <option value="ជុក ហ័ន">
-        <option value="រិន សិរីភាព">
-        <option value="ប៊ន់ ឆដា">
-        <option value="ចំណាន វាសនា">
-        <option value="សុខ ស្រីពេជ្រ">
-        <option value="ហូ វីហ្សា">
-        <option value="ឧន ស្រីណែត">
-        <option value="លាង សុភារី">
-        <option value="រ៉េត មួយស៊ាំង">
-        <option value="narei">
-        <option value="chanthoeurn Chhoeurn">
-    </datalist>
+    <div id="setup-form" class="hidden">
+        <p>សូមចុះឈ្មោះដើម្បីប្រើប្រាស់</p>
+        <input type="text" id="fullname" placeholder="ឈ្មោះពេញ">
+        <input type="text" id="role" placeholder="តួនាទី">
+        <button style="background:#007bff; color:white;" onclick="saveProfile()">រក្សាទុកទិន្នន័យ</button>
+    </div>
 
-    <label>តួនាទី</label>
-    <input id="role" placeholder="តួនាទីនឹងបង្ហាញទីនេះ" readonly>
+    <div id="attendance-section">
+        <div class="user-badge">👤 <span id="display-name"></span></div>
+        <div style="font-size: 13px; color: #666; margin-bottom: 20px;" id="display-role"></div>
+        
+        <div id="action-buttons">
+            <button class="btn-checkin" onclick="handleAttendance('Check In')">Check In (ចូល)</button>
+            <button class="btn-checkout" onclick="handleAttendance('Check Out')">Check Out (ចេញ)</button>
+        </div>
 
-    <label>ប្រភេទវត្តមាន</label>
-    <select id="type" onchange="checkTime()">
-        <option value="checkin">ចូលធ្វើការ (Check-in)</option>
-        <option value="checkout">ចេញពីធ្វើការ (Check-out)</option>
-    </select>
-
-    <div class="time-box" id="timeBox">🕒 --:-- | 📅 --/--/----</div>
-
-    <label id="reasonLabel" style="display:none;color: #dc2626;">មូលហេតុ (យឺត/ចេញមុន)</label>
-    <textarea id="reason" placeholder="សូមបញ្ជាក់មូលហេតុ..."></textarea>
-
-    <button id="submitBtn" onclick="processAttendance()">ផ្ញើវត្តមានទៅ Telegram</button>
-    <div id="qrcode"></div>
+        <div id="reason-section" class="hidden">
+            <hr>
+            <h4 id="status-label" style="color: #dc3545;"></h4>
+            <textarea id="reason" rows="3" placeholder="បញ្ជាក់មូលហេតុនៅទីនេះ..."></textarea>
+            <button class="btn-send" onclick="submitData()">បញ្ជូនទៅប្រព័ន្ធ</button>
+            <button style="background:none; color: gray; font-size: 13px;" onclick="resetUI()">បោះបង់</button>
+        </div>
+        
+        <button style="background:none; color: #ccc; font-size: 10px; margin-top: 30px;" onclick="reRegister()">ចុះឈ្មោះថ្មី</button>
+    </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-const TELEGRAM_BOT_TOKEN = "8242266919:AAGE6uMJ_-UvM-3KBZkJVFhJyTLvcTVW5tQ";
-const TELEGRAM_CHAT_ID = "-1003584563383"; // លេខ ID ថ្មីដែលអ្នកបានផ្ញើមក
-const OFFICIAL_IN = "07:15";
-const OFFICIAL_OUT = "17:15";
+    const TELEGRAM_TOKEN = '8242266919:AAGE6uMJ_-UvM-3KBZkJVFhJyTLvcTVW5tQ';
+    const CHAT_ID = '-1003584563383';
+    
+    // បញ្ជាក់៖ ត្រូវយក URL ពី Google Sheets Deployment មកដាក់កន្លែងនេះ
+    const WEB_APP_URL = "ដាក់_WEB_APP_URL_របស់អ្នក_នៅទីនេះ"; 
 
-// ទិន្នន័យបុគ្គលិកដែលបានកែសម្រួលអក្ខរាវិរុទ្ធឱ្យត្រូវជាមួយ Datalist
-const staffDatabase = {
-    "ប៉ែន សំអូន": "នាយក",
-    "អេង ស្រីនីន": "អ្នកផ្តល់ព័ត៌មាន",
-    "មុំ សុផុន": "អ្នកអនាម័យ",
-    "អឿន កាណាល់": "គ្រូទី២",
-    "ម៉ឹង ស្រីនីត": "គ្រូទី៤ ទី៥",
-    "ប៉ូ សុខន": "គ្រូទី៣",
-    "ជុក ហ័ន": "មត្តេយ្យខ្ពស់",
-    "រិន សិរីភាព": "មត្តេយ្យមធ្យម",
-    "ប៊ន់ ឆដា": "មត្តេយ្យទាប",
-    "ចំណាន វាសនា": "found1",
-    "សុខ ស្រីពេជ្រ": "nursery",
-    "ហូ វីហ្សា": "TA nursery",
-    "ឧន ស្រីណែត": "level1",
-    "លាង សុភារី": "IT",
-    "រ៉េត មួយស៊ាំង": "ភាសាចិន",
-    "narei": "found2",
-    "chanthoeurn Chhoeurn": "IT"
-};
+    let currentStatus = "";
+    let isReasonRequired = false;
 
-function autoFillRole() {
-    const nameInput = document.getElementById("name");
-    const roleInput = document.getElementById("role");
-    const val = nameInput.value.trim();
-
-    if (staffDatabase[val]) {
-        roleInput.value = staffDatabase[val];
-        nameInput.classList.add("found-input");
-    } else {
-        roleInput.value = "";
-        nameInput.classList.remove("found-input");
-    }
-}
-
-function getNow(){
-    const now = new Date();
-    const time = now.toTimeString().slice(0,5);
-    const date = now.toLocaleDateString("en-GB");
-    return {time,date};
-}
-
-function checkTime(){
-    const {time} = getNow();
-    const type = document.getElementById("type").value;
-    const reason = document.getElementById("reason");
-    const label = document.getElementById("reasonLabel");
-    let needReason = false;
-    if(type==="checkin" && time > OFFICIAL_IN) needReason=true;
-    if(type==="checkout" && time < OFFICIAL_OUT) needReason=true;
-    reason.style.display = needReason ? "block" : "none";
-    label.style.display = needReason ? "block" : "none";
-}
-
-function updateTime(){
-    const {time,date} = getNow();
-    document.getElementById("timeBox").innerText = `🕒 ${time} | 📅 ${date}`;
-    checkTime();
-}
-updateTime();
-setInterval(updateTime, 60000);
-
-async function sendToTelegram(message) {
-    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-    try {
-        const response = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                chat_id: TELEGRAM_CHAT_ID,
-                text: message,
-                parse_mode: "HTML"
-            })
-        });
-        const result = await response.json();
-        if(!response.ok) {
-            alert("Telegram Error: " + result.description);
-            return false;
+    window.onload = function() {
+        const storedData = localStorage.getItem('staff_info');
+        if (storedData) {
+            const user = JSON.parse(storedData);
+            document.getElementById('display-name').innerText = user.name;
+            document.getElementById('display-role').innerText = "តួនាទី៖ " + user.role;
+            document.getElementById('setup-form').classList.add('hidden');
+        } else {
+            document.getElementById('setup-form').classList.remove('hidden');
+            document.getElementById('attendance-section').classList.add('hidden');
         }
-        return true;
-    } catch (error) { 
-        alert("Network Error: " + error);
-        return false; 
-    }
-}
+    };
 
-async function processAttendance() {
-    const name = document.getElementById("name").value;
-    const role = document.getElementById("role").value;
-    const type = document.getElementById("type").value;
-    const reason = document.getElementById("reason").value;
-    const {time, date} = getNow();
-
-    if(!name || !role){
-        alert("សូមជ្រើសរើសឈ្មោះឱ្យបានត្រឹមត្រូវពីបញ្ជី (ឱ្យលោតតួនាទីសិន)!");
-        return;
+    function saveProfile() {
+        const name = document.getElementById('fullname').value.trim();
+        const role = document.getElementById('role').value.trim();
+        if (!name || !role) return Swal.fire('បំពេញឱ្យគ្រប់!', '', 'warning');
+        localStorage.setItem('staff_info', JSON.stringify({ name, role }));
+        location.reload();
     }
 
-    const btn = document.getElementById("submitBtn");
-    btn.disabled = true;
-    btn.innerText = "កំពុងផ្ញើ...";
+    function handleAttendance(status) {
+        currentStatus = status;
+        const now = new Date();
+        const hour = now.getHours();
+        const min = now.getMinutes();
 
-    let msg = `📋 <b>របាយការណ៍វត្តមាន</b>\n\n`;
-    msg += `👤 <b>ឈ្មោះ:</b> ${name}\n`;
-    msg += `💼 <b>តួនាទី:</b> ${role}\n`;
-    msg += `📊 <b>ស្ថានភាព:</b> ${type === 'checkin' ? '🟢 ចូលធ្វើការ' : '🔴 ចេញពីធ្វើការ'}\n`;
-    msg += `📅 <b>កាលបរិច្ឆេទ:</b> ${date}\n`;
-    msg += `🕒 <b>ម៉ោង:</b> ${time}`;
-    if(reason) msg += `\n⚠️ <b>មូលហេតុ:</b> ${reason}`;
+        if (status === 'Check In' && (hour > 7 || (hour === 7 && min > 30))) {
+            showReasonUI("អ្នកមកយឺត (ក្រោយ ៧:៣០)! សូមបញ្ជាក់មូលហេតុ៖");
+        } else if (status === 'Check Out' && hour < 17) {
+            showReasonUI("អ្នកចេញមុនម៉ោង (មុនម៉ោង ៥:០០)! សូមបញ្ជាក់មូលហេតុ៖");
+        } else {
+            isReasonRequired = false;
+            submitData();
+        }
+    }
 
-    const success = await sendToTelegram(msg);
-    if(success) {
-        alert("✅ រួចរាល់! វត្តមានត្រូវបានផ្ញើទៅ Telegram។");
-        document.getElementById("qrcode").innerHTML="";
-        new QRCode(document.getElementById("qrcode"), {
-            text: `Staff: ${name}, Time: ${time}`,
-            width: 120, height: 120
+    function showReasonUI(label) {
+        isReasonRequired = true;
+        document.getElementById('action-buttons').classList.add('hidden');
+        document.getElementById('reason-section').classList.remove('hidden');
+        document.getElementById('status-label').innerText = label;
+    }
+
+    function resetUI() {
+        document.getElementById('action-buttons').classList.remove('hidden');
+        document.getElementById('reason-section').classList.add('hidden');
+        document.getElementById('reason').value = "";
+    }
+
+    async function submitData() {
+        const reason = document.getElementById('reason').value.trim();
+        if (isReasonRequired && !reason) return Swal.fire('សូមបំពេញមូលហេតុ!', '', 'error');
+
+        Swal.fire({ title: 'កំពុងបញ្ជូនទិន្នន័យ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        const user = JSON.parse(localStorage.getItem('staff_info'));
+        const now = new Date();
+        const time = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        const date = now.toLocaleDateString("en-GB");
+
+        const payload = { date, name: user.name, role: user.role, type: currentStatus, time, reason };
+
+        // ១. ផ្ញើទៅ Google Sheets (Web App)
+        try {
+            await fetch(WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                cache: 'no-cache',
+                body: JSON.stringify(payload)
+            });
+        } catch (e) { console.log("Sheet Error", e); }
+
+        // ២. ផ្ញើទៅ Telegram (Real-time Alert)
+        let msg = `📊 <b>របាយការណ៍វត្តមាន</b>\n`;
+        msg += `👤 ឈ្មោះ: ${user.name}\n`;
+        msg += `💼 តួនាទី: ${user.role}\n`;
+        msg += `🚦 ស្ថានភាព: ${currentStatus === 'Check In' ? '✅ ចូលធ្វើការ' : '🚪 ចេញពីធ្វើការ'}\n`;
+        msg += `⏰ ម៉ោង: ${time}\n📅 ថ្ងៃទី: ${date}`;
+        if(reason) msg += `\n📝 មូលហេតុ: ${reason}`;
+
+        const teleUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}&parse_mode=HTML`;
+        
+        fetch(teleUrl).then(() => {
+            Swal.fire('ជោគជ័យ!', 'វត្តមានត្រូវបានកត់ត្រា', 'success').then(() => location.reload());
         });
     }
 
-    btn.disabled = false;
-    btn.innerText = "ផ្ញើវត្តមានទៅ Telegram";
-}
+    function reRegister() {
+        Swal.fire({
+            title: 'តើអ្នកចង់ចុះឈ្មោះថ្មីមែនទេ?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'បាទ',
+            cancelButtonText: 'ទេ'
+        }).then((res) => {
+            if(res.isConfirmed) { localStorage.clear(); location.reload(); }
+        });
+    }
 </script>
 </body>
 </html>
