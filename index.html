@@ -6,86 +6,95 @@
     <title>ស្កែនវត្តមាន - Mikids</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { font-family: 'Khmer OS Battambang', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f4f7f6; margin: 0; }
-        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 90%; max-width: 400px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; }
-        .btn-blue { background: #007bff; color: white; }
-        .btn-checkin { background: #28a745; color: white; }
-        .btn-checkout { background: #dc3545; color: white; }
+        body { font-family: 'Khmer OS Battambang', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f0f2f5; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 90%; max-width: 380px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 10px; font-size: 14px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; border: none; border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; }
+        .btn-save { background: #007bff; color: white; }
+        .btn-in { background: #28a745; color: white; margin-bottom: 10px; }
+        .btn-out { background: #dc3545; color: white; }
         .hidden { display: none !important; }
-        .user-info { background: #e9ecef; padding: 15px; border-radius: 15px; margin-bottom: 20px; }
+        .info-box { background: #f8f9fa; padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #eee; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>ស្កែនវត្តមាន</h2>
-    
-    <div id="register-form" class="hidden">
-        <p>សូមចុះឈ្មោះតែម្តងគត់ដើម្បីប្រើប្រាស់</p>
-        <input type="text" id="fullname" placeholder="ឈ្មោះពេញ">
-        <input type="text" id="role" placeholder="តួនាទី">
-        <button class="btn-blue" onclick="saveProfile()">រក្សាទុកទិន្នន័យ</button>
+    <h2 id="title">Mikids Attendance</h2>
+
+    <div id="reg-form" class="hidden">
+        <p>សូមចុះឈ្មោះដើម្បីស្កែន (តែម្តងគត់)</p>
+        <input type="text" id="fname" placeholder="ឈ្មោះពេញ (ដូចក្នុងបញ្ជី)">
+        <input type="text" id="frole" placeholder="តួនាទី">
+        <button class="btn-save" onclick="doRegister()">រក្សាទុក និងប្រើប្រាស់</button>
+        <p style="font-size: 11px; color: red; margin-top: 15px;">បញ្ជាក់៖ បើអ្នកស្កែនហើយនៅតែឱ្យបំពេញឈ្មោះទៀត សូមចុចប៊ូតុងត្រេបី (...) រួចជ្រើសរើស "Open in Browser" ឬ "បើកក្នុងកម្មវិធីរុករក"។</p>
     </div>
 
-    <div id="attendance-section" class="hidden">
-        <div class="user-info">
-            👤 <span id="display-name" style="font-weight: bold;"></span><br>
-            <small id="display-role"></small>
+    <div id="att-form" class="hidden">
+        <div class="info-box">
+            <span style="color: #888; font-size: 12px;">ស្វាគមន៍</span><br>
+            <b id="user-name" style="font-size: 18px; color: #007bff;"></b><br>
+            <span id="user-role" style="font-size: 13px; color: #555;"></span>
         </div>
-        <button class="btn-checkin" onclick="submitAttendance('Check In')">Check In (ចូល)</button>
-        <button class="btn-checkout" onclick="submitAttendance('Check Out')">Check Out (ចេញ)</button>
-        <button style="background:none; color: #ccc; font-size: 10px; margin-top: 20px;" onclick="resetProfile()">ចុះឈ្មោះជាថ្មី</button>
+        <button class="btn-in" onclick="sendToSheet('Check In')">Check In (ចូល)</button>
+        <button class="btn-out" onclick="sendToSheet('Check Out')">Check Out (ចេញ)</button>
+        <button style="background:none; color:#ccc; font-size:10px; margin-top:20px;" onclick="clearData()">ចុះឈ្មោះថ្មី</button>
     </div>
 </div>
 
 <script>
-    // ១. ដាក់ Web App URL របស់អ្នកនៅទីនេះ
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx1cktfgeEfjtrvAJ5FWvn0Qgw6Szi7uxYWF6SLODsjRvACyG6OfZJSuzaMKPS1tAy3/exec"; 
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbx1cktfgeEfjtrvAJ5FWvn0Qgw6Szi7uxYWF6SLODsjRvACyG6OfZJSuzaMKPS1tAy3/exec";
 
     window.onload = function() {
-        const user = localStorage.getItem('mikids_user');
-        if (user) {
-            const data = JSON.parse(user);
-            document.getElementById('display-name').innerText = data.name;
-            document.getElementById('display-role').innerText = "តួនាទី៖ " + data.role;
-            document.getElementById('attendance-section').classList.remove('hidden');
-        } else {
-            document.getElementById('register-form').classList.remove('hidden');
-        }
+        checkUser();
     };
 
-    function saveProfile() {
-        const name = document.getElementById('fullname').value.trim();
-        const role = document.getElementById('role').value.trim();
-        if (!name || !role) return Swal.fire('បំពេញឱ្យគ្រប់!', '', 'warning');
-        
-        localStorage.setItem('mikids_user', JSON.stringify({ name, role }));
-        location.reload(); // Refresh ដើម្បីបង្ហាញប៊ូតុងស្កែន
+    function checkUser() {
+        const saved = localStorage.getItem('mikids_v2');
+        if (saved) {
+            const user = JSON.parse(saved);
+            document.getElementById('user-name').innerText = user.name;
+            document.getElementById('user-role').innerText = user.role;
+            document.getElementById('att-form').classList.remove('hidden');
+            document.getElementById('reg-form').classList.add('hidden');
+            document.getElementById('title').innerText = "កត់ត្រាវត្តមាន";
+        } else {
+            document.getElementById('reg-form').classList.remove('hidden');
+            document.getElementById('att-form').classList.add('hidden');
+        }
     }
 
-    async function submitAttendance(type) {
-        Swal.fire({ title: 'កំពុងកត់ត្រា...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    function doRegister() {
+        const name = document.getElementById('fname').value.trim();
+        const role = document.getElementById('frole').value.trim();
+        if(!name || !role) return Swal.fire('សូមបំពេញឱ្យគ្រប់!', '', 'warning');
         
-        const user = JSON.parse(localStorage.getItem('mikids_user'));
+        localStorage.setItem('mikids_v2', JSON.stringify({ name, role }));
+        checkUser();
+    }
+
+    async function sendToSheet(status) {
+        Swal.fire({ title: 'កំពុងបញ្ជូន...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        const user = JSON.parse(localStorage.getItem('mikids_v2'));
         const now = new Date();
         const time = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
         const date = now.toLocaleDateString("en-GB");
 
-        const payload = { date, name: user.name, role: user.role, type: type, time: time, reason: "" };
+        const data = { date, name: user.name, role: user.role, type: status, time, reason: "" };
 
         try {
-            await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            Swal.fire('ជោគជ័យ!', 'វត្តមានត្រូវបានកត់ត្រា', 'success');
+            await fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+            Swal.fire('ជោគជ័យ!', 'វត្តមានត្រូវបានរក្សាទុក', 'success');
         } catch (e) {
-            Swal.fire('Error!', 'មិនអាចបញ្ជូនទិន្នន័យបាន', 'error');
+            Swal.fire('កំហុស!', 'មិនអាចបញ្ជូនបានទេ', 'error');
         }
     }
 
-    function resetProfile() {
-        localStorage.removeItem('mikids_user');
-        location.reload();
+    function clearData() {
+        if(confirm("លុបឈ្មោះនេះមែនទេ?")) {
+            localStorage.removeItem('mikids_v2');
+            location.reload();
+        }
     }
 </script>
 </body>
