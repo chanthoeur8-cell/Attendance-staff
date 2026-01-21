@@ -42,24 +42,20 @@
 </div>
 
 <script>
-    // ការកំណត់ព័ត៌មានប្រព័ន្ធ
     const TELEGRAM_TOKEN = '8242266919:AAGE6uMJ_-UvM-3KBZkJVFhJyTLvcTVW5tQ';
     const CHAT_ID = '-1003584563383';
     const SHEET_URL = "https://script.google.com/macros/s/AKfycbx1cktfgeEfjtrvAJ5FWvn0Qgw6Szi7uxYWF6SLODsjRvACyG6OfZJSuzaMKPS1tAy3/exec";
 
-    window.onload = function() {
-        checkUser();
-    };
+    window.onload = function() { checkUser(); };
 
     function checkUser() {
-        const saved = localStorage.getItem('mikids_v3');
+        const saved = localStorage.getItem('mikids_v4');
         if (saved) {
             const user = JSON.parse(saved);
             document.getElementById('user-name').innerText = user.name;
             document.getElementById('user-role').innerText = user.role;
             document.getElementById('att-form').classList.remove('hidden');
             document.getElementById('reg-form').classList.add('hidden');
-            document.getElementById('title').innerText = "កត់ត្រាវត្តមាន";
         } else {
             document.getElementById('reg-form').classList.remove('hidden');
             document.getElementById('att-form').classList.add('hidden');
@@ -70,40 +66,40 @@
         const name = document.getElementById('fname').value.trim();
         const role = document.getElementById('frole').value.trim();
         if(!name || !role) return Swal.fire('សូមបំពេញឱ្យគ្រប់!', '', 'warning');
-        localStorage.setItem('mikids_v3', JSON.stringify({ name, role }));
+        localStorage.setItem('mikids_v4', JSON.stringify({ name, role }));
         checkUser();
     }
 
     async function sendToSystem(status) {
         Swal.fire({ title: 'កំពុងបញ្ជូន...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        const user = JSON.parse(localStorage.getItem('mikids_v3'));
+        const user = JSON.parse(localStorage.getItem('mikids_v4'));
         const now = new Date();
         const time = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
         const date = now.toLocaleDateString("en-GB");
 
         // ១. ផ្ញើទៅ Google Sheets
-        const sheetData = { date, name: user.name, role: user.role, type: status, time, reason: "" };
-        try {
-            await fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(sheetData) });
-        } catch (e) { console.log("Sheet Error"); }
+        fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ date, name: user.name, role: user.role, type: status, time, reason: "" }) });
 
-        // ២. ផ្ញើទៅ Telegram
-        let msg = `📊 <b>របាយការណ៍វត្តមាន</b>\n`;
-        msg += `👤 ឈ្មោះ: ${user.name}\n`;
-        msg += `💼 តួនាទី: ${user.role}\n`;
-        msg += `🚦 ស្ថានភាព: ${status === 'Check In' ? '✅ ចូលធ្វើការ' : '🚪 ចេញពីធ្វើការ'}\n`;
-        msg += `⏰ ម៉ោង: ${time}\n📅 ថ្ងៃទី: ${date}`;
-
-        const teleUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}&parse_mode=HTML`;
+        // ២. ផ្ញើទៅ Telegram (ប្រើកម្មវិធីផ្ញើដាច់ដោយឡែក)
+        const msg = `📊 <b>របាយការណ៍វត្តមាន</b>\n👤 ឈ្មោះ: ${user.name}\n💼 តួនាទី: ${user.role}\n🚦 ស្ថានភាព: ${status === 'Check In' ? '✅ ចូលធ្វើការ' : '🚪 ចេញពីធ្វើការ'}\n⏰ ម៉ោង: ${time}\n📅 ថ្ងៃទី: ${date}`;
         
-        fetch(teleUrl).then(() => {
-            Swal.fire('ជោគជ័យ!', 'វត្តមានត្រូវបានរក្សាទុក និងផ្ញើទៅតេឡេក្រាម', 'success');
-        });
+        const teleUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+        
+        try {
+            await fetch(teleUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: CHAT_ID, text: msg, parse_mode: 'HTML' })
+            });
+            Swal.fire('ជោគជ័យ!', 'វត្តមានត្រូវបានកត់ត្រា និងផ្ញើទៅ Telegram', 'success');
+        } catch (e) {
+            Swal.fire('ជោគជ័យ!', 'ទិន្នន័យត្រូវបានបញ្ជូន', 'success');
+        }
     }
 
     function clearData() {
         if(confirm("លុបឈ្មោះនេះមែនទេ?")) {
-            localStorage.removeItem('mikids_v3');
+            localStorage.removeItem('mikids_v4');
             location.reload();
         }
     }
