@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ស្កែនវត្តមាន - Mikids</title>
+    <title>ប្រព័ន្ធស្កែនវត្តមាន - Mikids</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body { font-family: 'Khmer OS Battambang', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f0f2f5; margin: 0; }
         .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 90%; max-width: 380px; text-align: center; }
         input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 10px; font-size: 14px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; border: none; border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; }
+        button { width: 100%; padding: 15px; border: none; border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; transition: 0.3s; }
         .btn-save { background: #007bff; color: white; }
         .btn-in { background: #28a745; color: white; margin-bottom: 10px; }
         .btn-out { background: #dc3545; color: white; }
         .hidden { display: none !important; }
         .info-box { background: #f8f9fa; padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #eee; }
+        p { font-size: 13px; color: #666; }
     </style>
 </head>
 <body>
@@ -23,39 +24,47 @@
     <h2 id="title">Mikids Attendance</h2>
 
     <div id="reg-form" class="hidden">
-        <p>សូមចុះឈ្មោះដើម្បីស្កែន (តែម្តងគត់)</p>
+        <p>សូមចុះឈ្មោះដើម្បីប្រើប្រាស់ (តែម្តងគត់)</p>
         <input type="text" id="fname" placeholder="ឈ្មោះពេញ">
         <input type="text" id="frole" placeholder="តួនាទី">
-        <button class="btn-save" onclick="doRegister()">រក្សាទុក និងប្រើប្រាស់</button>
+        <button class="btn-save" onclick="doRegister()">រក្សាទុកទិន្នន័យ</button>
     </div>
 
     <div id="att-form" class="hidden">
         <div class="info-box">
-            <span style="color: #888; font-size: 12px;">ស្វាគមន៍</span><br>
+            <span style="color: #888; font-size: 12px;">សួស្តី!</span><br>
             <b id="user-name" style="font-size: 18px; color: #007bff;"></b><br>
             <span id="user-role" style="font-size: 13px; color: #555;"></span>
         </div>
+        
         <button class="btn-in" onclick="sendToSystem('Check In')">Check In (ចូល)</button>
         <button class="btn-out" onclick="sendToSystem('Check Out')">Check Out (ចេញ)</button>
-        <button style="background:none; color:#ccc; font-size:10px; margin-top:20px;" onclick="clearData()">ចុះឈ្មោះថ្មី</button>
+        
+        <div style="margin-top: 25px;">
+            <button style="background:none; color: #bbb; font-size: 11px; text-decoration: underline;" onclick="clearData()">ចុះឈ្មោះថ្មី</button>
+        </div>
     </div>
 </div>
 
 <script>
-    const TELEGRAM_TOKEN = '8242266919:AAGE6uMJ_-UvM-3KBZkJVFhJyTLvcTVW5tQ';
-    const CHAT_ID = '-1003584563383';
-    const SHEET_URL = "https://script.google.com/macros/s/AKfycbx1cktfgeEfjtrvAJ5FWvn0Qgw6Szi7uxYWF6SLODsjRvACyG6OfZJSuzaMKPS1tAy3/exec";
+    /** * សំខាន់៖ ត្រូវប្រាកដថាអ្នកបាន Deploy Apps Script ថ្មី 
+     * រួចយក Web App URL មកដាក់ខាងក្រោមនេះ
+     */
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz5X2j6hX7SWDhnjEzvShvTSYPgi6CC_tGBmiMZ6axFlPcqTL2PDfSsnueHPs7meY6X/exec"; 
 
-    window.onload = function() { checkUser(); };
+    window.onload = function() {
+        checkUser();
+    };
 
     function checkUser() {
-        const saved = localStorage.getItem('mikids_v4');
+        const saved = localStorage.getItem('mikids_final_v1');
         if (saved) {
             const user = JSON.parse(saved);
             document.getElementById('user-name').innerText = user.name;
             document.getElementById('user-role').innerText = user.role;
             document.getElementById('att-form').classList.remove('hidden');
             document.getElementById('reg-form').classList.add('hidden');
+            document.getElementById('title').innerText = "កត់ត្រាវត្តមាន";
         } else {
             document.getElementById('reg-form').classList.remove('hidden');
             document.getElementById('att-form').classList.add('hidden');
@@ -65,41 +74,51 @@
     function doRegister() {
         const name = document.getElementById('fname').value.trim();
         const role = document.getElementById('frole').value.trim();
-        if(!name || !role) return Swal.fire('សូមបំពេញឱ្យគ្រប់!', '', 'warning');
-        localStorage.setItem('mikids_v4', JSON.stringify({ name, role }));
+        if(!name || !role) return Swal.fire('បំពេញឱ្យគ្រប់!', '', 'warning');
+        
+        localStorage.setItem('mikids_final_v1', JSON.stringify({ name, role }));
         checkUser();
     }
 
     async function sendToSystem(status) {
         Swal.fire({ title: 'កំពុងបញ្ជូន...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        const user = JSON.parse(localStorage.getItem('mikids_v4'));
+        
+        const user = JSON.parse(localStorage.getItem('mikids_final_v1'));
         const now = new Date();
         const time = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
         const date = now.toLocaleDateString("en-GB");
 
-        // ១. ផ្ញើទៅ Google Sheets
-        fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ date, name: user.name, role: user.role, type: status, time, reason: "" }) });
+        const payload = {
+            date: date,
+            name: user.name,
+            role: user.role,
+            type: status,
+            time: time,
+            reason: ""
+        };
 
-        // ២. ផ្ញើទៅ Telegram (ប្រើកម្មវិធីផ្ញើដាច់ដោយឡែក)
-        const msg = `📊 <b>របាយការណ៍វត្តមាន</b>\n👤 ឈ្មោះ: ${user.name}\n💼 តួនាទី: ${user.role}\n🚦 ស្ថានភាព: ${status === 'Check In' ? '✅ ចូលធ្វើការ' : '🚪 ចេញពីធ្វើការ'}\n⏰ ម៉ោង: ${time}\n📅 ថ្ងៃទី: ${date}`;
-        
-        const teleUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-        
         try {
-            await fetch(teleUrl, {
+            // បញ្ជូនទៅកាន់ Google Apps Script (ដែលនឹងបន្តផ្ញើទៅ Telegram)
+            await fetch(WEB_APP_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: CHAT_ID, text: msg, parse_mode: 'HTML' })
+                mode: 'no-cors',
+                body: JSON.stringify(payload)
             });
-            Swal.fire('ជោគជ័យ!', 'វត្តមានត្រូវបានកត់ត្រា និងផ្ញើទៅ Telegram', 'success');
+            
+            Swal.fire({
+                title: 'ជោគជ័យ!',
+                text: 'វត្តមានត្រូវបានកត់ត្រា និងផ្ញើទៅ Telegram',
+                icon: 'success',
+                timer: 2000
+            });
         } catch (e) {
-            Swal.fire('ជោគជ័យ!', 'ទិន្នន័យត្រូវបានបញ្ជូន', 'success');
+            Swal.fire('កំហុស!', 'មិនអាចបញ្ជូនទិន្នន័យបានទេ', 'error');
         }
     }
 
     function clearData() {
-        if(confirm("លុបឈ្មោះនេះមែនទេ?")) {
-            localStorage.removeItem('mikids_v4');
+        if(confirm("តើអ្នកចង់លុបទិន្នន័យឈ្មោះនេះមែនទេ?")) {
+            localStorage.removeItem('mikids_final_v1');
             location.reload();
         }
     }
