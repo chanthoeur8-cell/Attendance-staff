@@ -3,73 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ប្រព័ន្ធស្កែនវត្តមាន - 1TUEK.COM</title>
+    <title>ស្កែនវត្តមាន - Mikids</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body { font-family: 'Khmer OS Battambang', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f4f7f6; margin: 0; }
-        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 95%; max-width: 400px; text-align: center; }
-        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 14px; }
-        button { width: 100%; padding: 14px; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; margin-top: 10px; }
-        .btn-checkin { background-color: #28a745; color: white; }
-        .btn-checkout { background-color: #dc3545; color: white; }
-        .btn-send { background-color: #6f42c1; color: white; }
+        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 90%; max-width: 400px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; }
+        .btn-blue { background: #007bff; color: white; }
+        .btn-checkin { background: #28a745; color: white; }
+        .btn-checkout { background: #dc3545; color: white; }
         .hidden { display: none !important; }
-        .user-badge { background: #e9ecef; padding: 15px; border-radius: 15px; margin-bottom: 20px; font-weight: bold; color: #1e40af; }
+        .user-info { background: #e9ecef; padding: 15px; border-radius: 15px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 id="title">ស្កែនវត្តមាន</h2>
+    <h2>ស្កែនវត្តមាន</h2>
     
-    <div id="setup-form" class="hidden">
-        <p>សូមចុះឈ្មោះដើម្បីប្រើប្រាស់</p>
+    <div id="register-form" class="hidden">
+        <p>សូមចុះឈ្មោះតែម្តងគត់ដើម្បីប្រើប្រាស់</p>
         <input type="text" id="fullname" placeholder="ឈ្មោះពេញ">
         <input type="text" id="role" placeholder="តួនាទី">
-        <button style="background:#007bff; color:white;" onclick="saveProfile()">រក្សាទុកទិន្នន័យ</button>
+        <button class="btn-blue" onclick="saveProfile()">រក្សាទុកទិន្នន័យ</button>
     </div>
 
-    <div id="attendance-section">
-        <div class="user-badge">👤 <span id="display-name"></span></div>
-        <div style="font-size: 13px; color: #666; margin-bottom: 20px;" id="display-role"></div>
-        
-        <div id="action-buttons">
-            <button class="btn-checkin" onclick="handleAttendance('Check In')">Check In (ចូល)</button>
-            <button class="btn-checkout" onclick="handleAttendance('Check Out')">Check Out (ចេញ)</button>
+    <div id="attendance-section" class="hidden">
+        <div class="user-info">
+            👤 <span id="display-name" style="font-weight: bold;"></span><br>
+            <small id="display-role"></small>
         </div>
-
-        <div id="reason-section" class="hidden">
-            <hr>
-            <h4 id="status-label" style="color: #dc3545;"></h4>
-            <textarea id="reason" rows="3" placeholder="បញ្ជាក់មូលហេតុនៅទីនេះ..."></textarea>
-            <button class="btn-send" onclick="submitData()">បញ្ជូនទៅប្រព័ន្ធ</button>
-            <button style="background:none; color: gray; font-size: 13px;" onclick="resetUI()">បោះបង់</button>
-        </div>
-        
-        <button style="background:none; color: #ccc; font-size: 10px; margin-top: 30px;" onclick="reRegister()">ចុះឈ្មោះថ្មី</button>
+        <button class="btn-checkin" onclick="submitAttendance('Check In')">Check In (ចូល)</button>
+        <button class="btn-checkout" onclick="submitAttendance('Check Out')">Check Out (ចេញ)</button>
+        <button style="background:none; color: #ccc; font-size: 10px; margin-top: 20px;" onclick="resetProfile()">ចុះឈ្មោះជាថ្មី</button>
     </div>
 </div>
 
 <script>
-    const TELEGRAM_TOKEN = '8242266919:AAGE6uMJ_-UvM-3KBZkJVFhJyTLvcTVW5tQ';
-    const CHAT_ID = '-1003584563383';
-    
-    // បញ្ជាក់៖ ត្រូវយក URL ពី Google Sheets Deployment មកដាក់កន្លែងនេះ
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx1cktfgcEfjtrvAJ5FWvn0Qgw6Szi7uxYWF6SLODsjRvACyG6OfZJSuzaMKPS1tAy3/exec"; 
-
-    let currentStatus = "";
-    let isReasonRequired = false;
+    // ១. ដាក់ Web App URL របស់អ្នកនៅទីនេះ
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx1cktfgeEfjtrvAJ5FWvn0Qgw6Szi7uxYWF6SLODsjRvACyG6OfZJSuzaMKPS1tAy3/exec"; 
 
     window.onload = function() {
-        const storedData = localStorage.getItem('staff_info');
-        if (storedData) {
-            const user = JSON.parse(storedData);
-            document.getElementById('display-name').innerText = user.name;
-            document.getElementById('display-role').innerText = "តួនាទី៖ " + user.role;
-            document.getElementById('setup-form').classList.add('hidden');
+        const user = localStorage.getItem('mikids_user');
+        if (user) {
+            const data = JSON.parse(user);
+            document.getElementById('display-name').innerText = data.name;
+            document.getElementById('display-role').innerText = "តួនាទី៖ " + data.role;
+            document.getElementById('attendance-section').classList.remove('hidden');
         } else {
-            document.getElementById('setup-form').classList.remove('hidden');
-            document.getElementById('attendance-section').classList.add('hidden');
+            document.getElementById('register-form').classList.remove('hidden');
         }
     };
 
@@ -77,89 +60,33 @@
         const name = document.getElementById('fullname').value.trim();
         const role = document.getElementById('role').value.trim();
         if (!name || !role) return Swal.fire('បំពេញឱ្យគ្រប់!', '', 'warning');
-        localStorage.setItem('staff_info', JSON.stringify({ name, role }));
-        location.reload();
+        
+        localStorage.setItem('mikids_user', JSON.stringify({ name, role }));
+        location.reload(); // Refresh ដើម្បីបង្ហាញប៊ូតុងស្កែន
     }
 
-    function handleAttendance(status) {
-        currentStatus = status;
-        const now = new Date();
-        const hour = now.getHours();
-        const min = now.getMinutes();
-
-        if (status === 'Check In' && (hour > 7 || (hour === 7 && min > 30))) {
-            showReasonUI("អ្នកមកយឺត (ក្រោយ ៧:៣០)! សូមបញ្ជាក់មូលហេតុ៖");
-        } else if (status === 'Check Out' && hour < 17) {
-            showReasonUI("អ្នកចេញមុនម៉ោង (មុនម៉ោង ៥:០០)! សូមបញ្ជាក់មូលហេតុ៖");
-        } else {
-            isReasonRequired = false;
-            submitData();
-        }
-    }
-
-    function showReasonUI(label) {
-        isReasonRequired = true;
-        document.getElementById('action-buttons').classList.add('hidden');
-        document.getElementById('reason-section').classList.remove('hidden');
-        document.getElementById('status-label').innerText = label;
-    }
-
-    function resetUI() {
-        document.getElementById('action-buttons').classList.remove('hidden');
-        document.getElementById('reason-section').classList.add('hidden');
-        document.getElementById('reason').value = "";
-    }
-
-    async function submitData() {
-        const reason = document.getElementById('reason').value.trim();
-        if (isReasonRequired && !reason) return Swal.fire('សូមបំពេញមូលហេតុ!', '', 'error');
-
-        Swal.fire({ title: 'កំពុងបញ្ជូនទិន្នន័យ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-        const user = JSON.parse(localStorage.getItem('staff_info'));
+    async function submitAttendance(type) {
+        Swal.fire({ title: 'កំពុងកត់ត្រា...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        
+        const user = JSON.parse(localStorage.getItem('mikids_user'));
         const now = new Date();
         const time = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
         const date = now.toLocaleDateString("en-GB");
 
-        const payload = { date, name: user.name, role: user.role, type: currentStatus, time, reason };
+        const payload = { date, name: user.name, role: user.role, type: type, time: time, reason: "" };
 
-        // ១. ផ្ញើទៅ Google Sheets (Web App)
         try {
-            await fetch(WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                cache: 'no-cache',
-                body: JSON.stringify(payload)
-            });
-        } catch (e) { console.log("Sheet Error", e); }
-
-        // ២. ផ្ញើទៅ Telegram (Real-time Alert)
-        let msg = `📊 <b>របាយការណ៍វត្តមាន</b>\n`;
-        msg += `👤 ឈ្មោះ: ${user.name}\n`;
-        msg += `💼 តួនាទី: ${user.role}\n`;
-        msg += `🚦 ស្ថានភាព: ${currentStatus === 'Check In' ? '✅ ចូលធ្វើការ' : '🚪 ចេញពីធ្វើការ'}\n`;
-        msg += `⏰ ម៉ោង: ${time}\n📅 ថ្ងៃទី: ${date}`;
-        if(reason) msg += `\n📝 មូលហេតុ: ${reason}`;
-
-        const teleUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}&parse_mode=HTML`;
-        
-        fetch(teleUrl).then(() => {
-            Swal.fire('ជោគជ័យ!', 'វត្តមានត្រូវបានកត់ត្រា', 'success').then(() => location.reload());
-        });
+            await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+            Swal.fire('ជោគជ័យ!', 'វត្តមានត្រូវបានកត់ត្រា', 'success');
+        } catch (e) {
+            Swal.fire('Error!', 'មិនអាចបញ្ជូនទិន្នន័យបាន', 'error');
+        }
     }
 
-    function reRegister() {
-        Swal.fire({
-            title: 'តើអ្នកចង់ចុះឈ្មោះថ្មីមែនទេ?',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'បាទ',
-            cancelButtonText: 'ទេ'
-        }).then((res) => {
-            if(res.isConfirmed) { localStorage.clear(); location.reload(); }
-        });
+    function resetProfile() {
+        localStorage.removeItem('mikids_user');
+        location.reload();
     }
 </script>
 </body>
 </html>
-
