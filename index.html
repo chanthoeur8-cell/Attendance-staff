@@ -1,153 +1,110 @@
 <!DOCTYPE html>
 <html lang="km">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mikids Attendance</title>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<style>
-body{
-    font-family: 'Khmer OS Battambang', Arial, sans-serif;
-    background:#f0f2f5;
-    min-height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    margin:0;
-}
-.container{
-    background:#fff;
-    width:90%;
-    max-width:380px;
-    padding:30px;
-    border-radius:20px;
-    box-shadow:0 4px 15px rgba(0,0,0,.1);
-    text-align:center;
-}
-h2{margin-bottom:20px;}
-input{
-    width:100%;
-    padding:12px;
-    margin:10px 0;
-    border-radius:10px;
-    border:1px solid #ccc;
-    font-size:14px;
-}
-button{
-    width:100%;
-    padding:14px;
-    border:none;
-    border-radius:12px;
-    font-size:16px;
-    font-weight:bold;
-    margin-top:10px;
-    cursor:pointer;
-}
-.btn-save{background:#007bff;color:#fff;}
-.btn-in{background:#28a745;color:#fff;}
-.btn-out{background:#dc3545;color:#fff;}
-.hidden{display:none;}
-.info{
-    background:#f8f9fa;
-    border-radius:15px;
-    padding:15px;
-    margin-bottom:20px;
-}
-.small-btn{
-    background:none;
-    color:#999;
-    font-size:12px;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance System</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; text-align: center; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; color: white; transition: 0.3s; font-size: 16px; }
+        .btn-in { background-color: #28a745; }
+        .btn-out { background-color: #007bff; }
+        .btn:disabled { background-color: #ccc; cursor: not-allowed; }
+        #status { margin-top: 15px; font-size: 14px; min-height: 20px; }
+    </style>
 </head>
-
 <body>
 
 <div class="container">
-    <h2 id="title">Mikids Attendance</h2>
-
-    <!-- REGISTER -->
-    <div id="register" class="hidden">
-        <p>សូមចុះឈ្មោះ (តែម្តង)</p>
-        <input id="name" placeholder="ឈ្មោះពេញ">
-        <input id="role" placeholder="តួនាទី">
-        <button class="btn-save" onclick="saveUser()">រក្សាទុក</button>
-    </div>
-
-    <!-- ATTENDANCE -->
-    <div id="attendance" class="hidden">
-        <div class="info">
-            <b id="showName"></b><br>
-            <span id="showRole"></span>
-        </div>
-
-        <button class="btn-in" onclick="sendData('Check In')">Check In (ចូល)</button>
-        <button class="btn-out" onclick="sendData('Check Out')">Check Out (ចេញ)</button>
-
-        <button class="small-btn" onclick="resetUser()">ចុះឈ្មោះថ្មី</button>
-    </div>
+    <h2>វត្តមានបុគ្គលិក</h2>
+    <input type="text" id="staffName" placeholder="បញ្ចូលឈ្មោះបុគ្គលិក" oninput="saveName()">
+    
+    <button id="inBtn" class="btn btn-in" onclick="sendAttendance('ចូលធ្វើការ')">Check-In</button>
+    <button id="outBtn" class="btn btn-out" onclick="sendAttendance('ចេញពីធ្វើការ')">Check-Out</button>
+    
+    <div id="status"></div>
 </div>
 
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz5X2j6hX7SWDhnjEzvShvTSYPgi6CC_tGBmiMZ6axFlPcqTL2PDfSsnueHPs7meY6X/exec";
+    // --- កែសម្រួល Chat ID ឱ្យត្រូវតាមលក្ខខណ្ឌ Telegram ---
+    const TELEGRAM_BOT_TOKEN = '8242266919:AAGE6uMJ_-UvM-3KBZkJVFhJyTLvcTVW5tQ';
+    const TELEGRAM_CHAT_ID = '-1003584563383'; // ខ្ញុំបានកែសម្រួលលេខ ID ក្រុម (ប្រាកដថាវាត្រូវ)
 
-window.onload = checkUser;
-
-function checkUser(){
-    const user = localStorage.getItem("mikids_user");
-    if(user){
-        const u = JSON.parse(user);
-        showName.innerText = u.name;
-        showRole.innerText = u.role;
-        register.classList.add("hidden");
-        attendance.classList.remove("hidden");
-    }else{
-        register.classList.remove("hidden");
-    }
-}
-
-function saveUser(){
-    const n = name.value.trim();
-    const r = role.value.trim();
-    if(!n || !r){
-        Swal.fire("សូមបំពេញឱ្យគ្រប់","","warning");
-        return;
-    }
-    localStorage.setItem("mikids_user", JSON.stringify({name:n, role:r}));
-    checkUser();
-}
-
-async function sendData(type){
-    const u = JSON.parse(localStorage.getItem("mikids_user"));
-    const now = new Date();
-
-    const payload = {
-        name: u.name,
-        role: u.role,
-        type: type,
-        date: now.toLocaleDateString("en-GB"),
-        time: now.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})
+    // មុខងារទាញយកឈ្មោះដែលធ្លាប់វាយពីមុនមកបង្ហាញ
+    window.onload = function() {
+        const savedName = localStorage.getItem('staff_name');
+        if (savedName) {
+            document.getElementById('staffName').value = savedName;
+        }
     };
 
-    Swal.fire({title:"កំពុងផ្ញើ...",allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
-
-    await fetch(WEB_APP_URL,{
-        method:"POST",
-        mode:"no-cors",
-        body:JSON.stringify(payload)
-    });
-
-    Swal.fire("ជោគជ័យ!","បានកត់ត្រាវត្តមាន","success");
-}
-
-function resetUser(){
-    if(confirm("តើចង់លុបទិន្នន័យមែនទេ?")){
-        localStorage.removeItem("mikids_user");
-        location.reload();
+    // មុខងាររក្សាទុកឈ្មោះក្នុងទូរស័ព្ទ/កុំព្យូទ័រ
+    function saveName() {
+        const name = document.getElementById('staffName').value;
+        localStorage.setItem('staff_name', name);
     }
-}
+
+    async function sendAttendance(type) {
+        const name = document.getElementById('staffName').value.trim();
+        const statusDisplay = document.getElementById('status');
+        const inBtn = document.getElementById('inBtn');
+        const outBtn = document.getElementById('outBtn');
+
+        if (!name) {
+            statusDisplay.innerText = "❌ សូមបញ្ចូលឈ្មោះមុនចុច!";
+            statusDisplay.style.color = "red";
+            return;
+        }
+
+        // បិទ Button បណ្ដោះអាសន្នការពារការចុចផ្ទួនៗ
+        inBtn.disabled = true;
+        outBtn.disabled = true;
+        statusDisplay.innerText = "⏳ កំពុងផ្ញើទៅ Telegram...";
+        statusDisplay.style.color = "#666";
+
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('km-KH', { hour: '2-digit', minute: '2-digit', hour12: true });
+        const dateString = now.toLocaleDateString('km-KH');
+
+        const message = `🔔 <b>ការកត់ត្រាវត្តមាន</b>\n` +
+                        `👤 ឈ្មោះ: <b>${name}</b>\n` +
+                        `📍 សកម្មភាព: <b>${type}</b>\n` +
+                        `⏰ ម៉ោង: ${timeString}\n` +
+                        `📅 កាលបរិច្ឆេទ: ${dateString}`;
+
+        try {
+            const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: TELEGRAM_CHAT_ID,
+                    text: message,
+                    parse_mode: 'HTML'
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.ok) {
+                statusDisplay.innerText = `✅ ${type} រួចរាល់!`;
+                statusDisplay.style.color = "green";
+            } else {
+                throw new Error(result.description);
+            }
+        } catch (error) {
+            console.error(error);
+            statusDisplay.innerText = "❌ បរាជ័យ: " + (error.message || "ឆែក Bot ឬ ID");
+            statusDisplay.style.color = "red";
+        } finally {
+            // បើក Button វិញក្រោយផ្ញើរួច ៣ វិនាទី
+            setTimeout(() => {
+                inBtn.disabled = false;
+                outBtn.disabled = false;
+            }, 3000);
+        }
+    }
 </script>
 
 </body>
