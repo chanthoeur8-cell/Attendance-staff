@@ -6,23 +6,29 @@
     <title>Attendance System</title>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; text-align: center; font-size: 16px; }
+        .container { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; }
+        h2 { margin-bottom: 20px; color: #333; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; text-align: center; }
         .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; color: white; transition: 0.3s; font-size: 16px; }
         .btn-in { background-color: #28a745; }
         .btn-out { background-color: #007bff; }
         .btn:disabled { background-color: #ccc; cursor: not-allowed; }
-        #status { margin-top: 15px; font-size: 14px; min-height: 20px; font-weight: 500; }
-        .staff-label { font-size: 12px; color: #888; margin-top: 5px; }
+        #status { margin-top: 15px; font-size: 13px; min-height: 20px; font-weight: 500; }
+        .info-text { font-size: 11px; color: #999; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="margin-top:0;">វត្តមានបុគ្គលិក</h2>
+    <h2>STAFF ATTENDANCE</h2>
     
-    <input type="text" id="staffName" placeholder="បញ្ចូលឈ្មោះបុគ្គលិករបស់អ្នក" oninput="saveNameToMemory()">
-    <p class="staff-label">ឈ្មោះនឹងត្រូវរក្សាទុកក្នុងម៉ាស៊ីននេះដោយស្វ័យប្រវត្តិ</p>
+    <input type="text" id="staffName" placeholder="Enter your Full Name" oninput="saveToMemory()">
+    
+    <input type="text" id="staffRole" placeholder="Enter your Role" oninput="saveToMemory()">
+    
+     <input type="text" id="phoneNumber" placeholder="Enter your Phone Number" oninput="saveToMemory()">
+    
+    <p class="info-text">ព័ត៌មាននេះបំពេញតែម្ដង វានឹងចងចាំជាប់ជានិច្ច</p>
     
     <button id="inBtn" class="btn btn-in" onclick="sendAttendance('Check-In 🟢')">Check-In</button>
     <button id="outBtn" class="btn btn-out" onclick="sendAttendance('Check-Out 🔵')">Check-Out</button>
@@ -31,60 +37,60 @@
 </div>
 
 <script>
-    // កំណត់ Token និង ID ក្រុមរបស់អ្នក (ពិនិត្យមើល ID ឱ្យបានច្បាស់)
     const TELEGRAM_BOT_TOKEN = '8242266919:AAGE6uMJ_-UvM-3KBZkJVFhJyTLvcTVW5tQ';
     const TELEGRAM_CHAT_ID = '-1003584563383'; 
 
-    // ១. ទាញឈ្មោះពី Memory មកបង្ហាញភ្លាមៗពេលបើក Web
+    // ទាញយកទិន្នន័យពី Memory មកបង្ហាញពេលបើក Web ម្ដងៗ
     window.onload = () => {
         const savedName = localStorage.getItem('staff_name');
-        if (savedName) {
-            document.getElementById('staffName').value = savedName;
-        }
+        const savedRole = localStorage.getItem('staff_role');
+        
+        if (savedName) document.getElementById('staffName').value = savedName;
+        if (savedRole) document.getElementById('staffRole').value = savedRole;
     };
 
-    // ២. រក្សាទុកឈ្មោះចូល Memory រាល់ពេលមានការវាយបញ្ចូល
-    function saveNameToMemory() {
+    // មុខងាររក្សាទុកទិន្នន័យ (ឈ្មោះ និង តួនាទី)
+    function saveToMemory() {
         const name = document.getElementById('staffName').value;
+        const role = document.getElementById('staffRole').value;
         localStorage.setItem('staff_name', name);
+        localStorage.setItem('staff_role', role);
+        localStorage.setItem('staff_phone', document.getElementById('phoneNumber').value);
     }
 
     async function sendAttendance(type) {
-        const nameInput = document.getElementById('staffName');
-        const name = nameInput.value.trim();
+        const name = document.getElementById('staffName').value.trim();
+        const role = document.getElementById('staffRole').value.trim();
+        const phone = document.getElementById('phoneNumber').value.trim();
         const statusDisplay = document.getElementById('status');
         const btns = document.querySelectorAll('.btn');
 
-        if (!name) {
-            statusDisplay.innerText = "⚠️ សូមបញ្ចូលឈ្មោះជាមុនសិន!";
+        if (!name || !role || !phone) {
+            statusDisplay.innerText = "⚠️ សូមបំពេញឈ្មោះ និងតួនាទី និងលេខទូរសព្ទឱ្យគ្រប់!";
             statusDisplay.style.color = "orange";
             return;
         }
 
-        // បិទប៊ូតុងការពារការចុចច្រំដែល
         btns.forEach(b => b.disabled = true);
-        statusDisplay.innerText = "⏳ កំពុងបញ្ជូនទិន្នន័យ...";
-        statusDisplay.style.color = "#666";
+        statusDisplay.innerText = "⏳ កំពុងបញ្ជូន...";
 
         const now = new Date();
         const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
         const date = now.toLocaleDateString('km-KH');
 
-        const message = `🏢 <b>របាយការណ៍វត្តមាន</b>\n\n` +
+        const message = `📋 <b>របាយការណ៍វត្តមាន</b>\n\n` +
                         `👤 ឈ្មោះ: <b>${name}</b>\n` +
+                        `💼 តួនាទី: <b>${role}</b>\n` +
                         `📍 សកម្មភាព: <b>${type}</b>\n` +
                         `⏰ ម៉ោង: <code>${time}</code>\n` +
-                        `📅 ថ្ងៃទី: <code>${date}</code>`;
+                        `📅 ថ្ងៃទី: <code>${date}</code>\n` +
+                        `📞 លេខទូរសព្ទ: <code>${localStorage.getItem('staff_phone')}</code>`;
 
         try {
             const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: TELEGRAM_CHAT_ID,
-                    text: message,
-                    parse_mode: 'HTML'
-                })
+                body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message, parse_mode: 'HTML' })
             });
 
             const data = await res.json();
@@ -92,18 +98,14 @@
                 statusDisplay.innerText = "✅ រួចរាល់! សារបានផ្ញើទៅ Telegram ។";
                 statusDisplay.style.color = "green";
             } else {
-                // បង្ហាញ Error ពិតប្រាកដពី Telegram API
                 statusDisplay.innerText = "❌ បញ្ហា៖ " + data.description;
                 statusDisplay.style.color = "red";
             }
         } catch (e) {
-            statusDisplay.innerText = "❌ បរាជ័យ! សូមពិនិត្យអ៊ីនធឺណិត។";
+            statusDisplay.innerText = "❌ បរាជ័យ! ឆែកអ៊ីនធឺណិត។";
             statusDisplay.style.color = "red";
         } finally {
-            // បើកប៊ូតុងវិញក្រោយ ២ វិនាទី
-            setTimeout(() => {
-                btns.forEach(b => b.disabled = false);
-            }, 2000);
+            setTimeout(() => { btns.forEach(b => b.disabled = false); }, 2000);
         }
     }
 </script>
