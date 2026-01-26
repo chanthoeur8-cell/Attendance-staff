@@ -6,16 +6,52 @@
     <title>ប្រព័ន្ធស្កែនវត្តមាន - Mikids</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { font-family: 'Khmer OS Battambang', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f0f2f5; margin: 0; }
-        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 90%; max-width: 380px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 10px; font-size: 14px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; border: none; border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; transition: 0.3s; }
+        body {
+            font-family: 'Khmer OS Battambang', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f0f2f5;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 380px;
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
         .btn-save { background: #007bff; color: white; }
-        .btn-in { background: #28a745; color: white; margin-bottom: 10px; }
+        .btn-in { background: #28a745; color: white; }
         .btn-out { background: #dc3545; color: white; }
-        .hidden { display: none !important; }
-        .info-box { background: #f8f9fa; padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #eee; }
-        p { font-size: 13px; color: #666; }
+        .hidden { display: none; }
+        .info-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -23,105 +59,88 @@
 <div class="container">
     <h2 id="title">Mikids Attendance</h2>
 
+    <!-- Registration -->
     <div id="reg-form" class="hidden">
-        <p>សូមចុះឈ្មោះដើម្បីប្រើប្រាស់ (តែម្តងគត់)</p>
+        <p>សូមចុះឈ្មោះ (តែម្តង)</p>
         <input type="text" id="fname" placeholder="ឈ្មោះពេញ">
         <input type="text" id="frole" placeholder="តួនាទី">
-        <button class="btn-save" onclick="doRegister()">រក្សាទុកទិន្នន័យ</button>
+        <button class="btn-save" onclick="doRegister()">រក្សាទុក</button>
     </div>
 
+    <!-- Attendance -->
     <div id="att-form" class="hidden">
         <div class="info-box">
-            <span style="color: #888; font-size: 12px;">សួស្តី!</span><br>
-            <b id="user-name" style="font-size: 18px; color: #007bff;"></b><br>
-            <span id="user-role" style="font-size: 13px; color: #555;"></span>
+            <b id="user-name"></b><br>
+            <span id="user-role"></span>
         </div>
-        
+
         <button class="btn-in" onclick="sendToSystem('Check In')">Check In (ចូល)</button>
         <button class="btn-out" onclick="sendToSystem('Check Out')">Check Out (ចេញ)</button>
-        
-        <div style="margin-top: 25px;">
-            <button style="background:none; color: #bbb; font-size: 11px; text-decoration: underline;" onclick="clearData()">ចុះឈ្មោះថ្មី</button>
-        </div>
+
+        <button style="background:none;color:#999;font-size:12px"
+                onclick="clearData()">ចុះឈ្មោះថ្មី</button>
     </div>
 </div>
 
 <script>
-    /** * សំខាន់៖ ត្រូវប្រាកដថាអ្នកបាន Deploy Apps Script ថ្មី 
-     * រួចយក Web App URL មកដាក់ខាងក្រោមនេះ
-     */
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz5X2j6hX7SWDhnjEzvShvTSYPgi6CC_tGBmiMZ6axFlPcqTL2PDfSsnueHPs7meY6X/exec"; 
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz5X2j6hX7SWDhnjEzvShvTSYPgi6CC_tGBmiMZ6axFlPcqTL2PDfSsnueHPs7meY6X/exec";
 
-    window.onload = function() {
-        checkUser();
+window.onload = checkUser;
+
+function checkUser() {
+    const data = localStorage.getItem('mikids_user');
+    if (data) {
+        const u = JSON.parse(data);
+        user-name.innerText = u.name;
+        user-role.innerText = u.role;
+        reg-form.classList.add('hidden');
+        att-form.classList.remove('hidden');
+    } else {
+        reg-form.classList.remove('hidden');
+    }
+}
+
+function doRegister() {
+    const name = fname.value.trim();
+    const role = frole.value.trim();
+    if (!name || !role) {
+        Swal.fire('សូមបំពេញឱ្យគ្រប់!', '', 'warning');
+        return;
+    }
+    localStorage.setItem('mikids_user', JSON.stringify({ name, role }));
+    checkUser();
+}
+
+async function sendToSystem(type) {
+    const u = JSON.parse(localStorage.getItem('mikids_user'));
+    const now = new Date();
+
+    const payload = {
+        date: now.toLocaleDateString('en-GB'),
+        time: now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+        name: u.name,
+        role: u.role,
+        type: type
     };
 
-    function checkUser() {
-        const saved = localStorage.getItem('mikids_final_v1');
-        if (saved) {
-            const user = JSON.parse(saved);
-            document.getElementById('user-name').innerText = user.name;
-            document.getElementById('user-role').innerText = user.role;
-            document.getElementById('att-form').classList.remove('hidden');
-            document.getElementById('reg-form').classList.add('hidden');
-            document.getElementById('title').innerText = "កត់ត្រាវត្តមាន";
-        } else {
-            document.getElementById('reg-form').classList.remove('hidden');
-            document.getElementById('att-form').classList.add('hidden');
-        }
+    Swal.fire({ title: 'កំពុងផ្ញើ...', didOpen: () => Swal.showLoading() });
+
+    await fetch(WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify(payload)
+    });
+
+    Swal.fire('ជោគជ័យ!', 'បានកត់ត្រាវត្តមាន', 'success');
+}
+
+function clearData() {
+    if (confirm('លុបទិន្នន័យ?')) {
+        localStorage.removeItem('mikids_user');
+        location.reload();
     }
-
-    function doRegister() {
-        const name = document.getElementById('fname').value.trim();
-        const role = document.getElementById('frole').value.trim();
-        if(!name || !role) return Swal.fire('បំពេញឱ្យគ្រប់!', '', 'warning');
-        
-        localStorage.setItem('mikids_final_v1', JSON.stringify({ name, role }));
-        checkUser();
-    }
-
-    async function sendToSystem(status) {
-        Swal.fire({ title: 'កំពុងបញ្ជូន...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        
-        const user = JSON.parse(localStorage.getItem('mikids_final_v1'));
-        const now = new Date();
-        const time = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-        const date = now.toLocaleDateString("en-GB");
-
-        const payload = {
-            date: date,
-            name: user.name,
-            role: user.role,
-            type: status,
-            time: time,
-            reason: ""
-        };
-
-        try {
-            // បញ្ជូនទៅកាន់ Google Apps Script (ដែលនឹងបន្តផ្ញើទៅ Telegram)
-            await fetch(WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify(payload)
-            });
-            
-            Swal.fire({
-                title: 'ជោគជ័យ!',
-                text: 'វត្តមានត្រូវបានកត់ត្រា និងផ្ញើទៅ Telegram',
-                icon: 'success',
-                timer: 2000
-            });
-        } catch (e) {
-            Swal.fire('កំហុស!', 'មិនអាចបញ្ជូនទិន្នន័យបានទេ', 'error');
-        }
-    }
-
-    function clearData() {
-        if(confirm("តើអ្នកចង់លុបទិន្នន័យឈ្មោះនេះមែនទេ?")) {
-            localStorage.removeItem('mikids_final_v1');
-            location.reload();
-        }
-    }
+}
 </script>
+
 </body>
 </html>
