@@ -5,15 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Staff Attendance System</title>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
         .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 380px; text-align: center; }
         h2 { color: #333; margin-bottom: 20px; text-transform: uppercase; }
         input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; text-align: center; }
         .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 12px; color: white; transition: 0.3s; font-size: 18px; }
         .btn-in { background-color: #28a745; }
         .btn-out { background-color: #007bff; }
-        .btn:disabled { background-color: #ccc; }
+        .btn:disabled { background-color: #ccc; cursor: not-allowed; opacity: 0.6; }
         #status { margin-top: 15px; font-size: 14px; min-height: 20px; }
+        .counter { background: #f8f9fa; padding: 12px; border-radius: 10px; margin: 15px 0; font-size: 14px; }
+        .counter-item { display: inline-block; margin: 0 10px; }
+        .count { font-weight: bold; color: #28a745; font-size: 18px; }
+        .location-info { background: #e8f5e9; padding: 10px; border-radius: 8px; margin: 10px 0; font-size: 12px; color: #2e7d32; }
+        .distance { font-weight: bold; color: #1976d2; }
     </style>
 </head>
 <body>
@@ -27,6 +32,19 @@
     
     <p style="font-size: 11px; color: #888; margin: 15px 0;">បំពេញតែម្ដង វានឹងចងចាំជាប់រហូត</p>
     
+    <div class="counter">
+        <div class="counter-item">
+            Check-In: <span class="count" id="checkinCount">0/2</span>
+        </div>
+        <div class="counter-item">
+            Check-Out: <span class="count" id="checkoutCount">0/1</span>
+        </div>
+    </div>
+    
+    <div id="locationStatus" class="location-info" style="display:none;">
+        📍 ចម្ងាយ: <span class="distance" id="distanceText">...</span>
+    </div>
+    
     <button id="inBtn" class="btn btn-in" onclick="sendAttendance('Check-In 🟢')">Check-In</button>
     <button id="outBtn" class="btn btn-out" onclick="sendAttendance('Check-Out 🔵')">Check-Out</button>
     
@@ -37,11 +55,20 @@
     const TELEGRAM_BOT_TOKEN = '8242266919:AAGE6uMJ_-UvM-3KBZkJVFhJyTLvcTVW5tQ';
     const TELEGRAM_CHAT_ID = '-1003584563383'; 
 
+    // ទីតាំងការិយាល័យ (Office Location)
+    const OFFICE_LAT = 11.615808345753639;
+    const OFFICE_LNG = 104.9076275084756;
+    const MAX_DISTANCE = 50; // meters (50m radius)
+
     // ១. មុខងារទាញទិន្នន័យមកបង្ហាញវិញ (Load Data)
     window.onload = () => {
         document.getElementById('staffName').value = localStorage.getItem('s_name') || '';
         document.getElementById('staffRole').value = localStorage.getItem('s_role') || '';
         document.getElementById('staffPhone').value = localStorage.getItem('s_phone') || '';
+        
+        // ពិនិត្យថ្ងៃថ្មី និងធ្វើការ reset
+        checkAndResetDaily();
+        updateUI();
     };
 
     // ២. មុខងាររក្សាទុកទិន្នន័យ (Save Data)
@@ -55,32 +82,174 @@
         localStorage.setItem('s_phone', phone);
     }
 
+    // ៣. ពិនិត្យថ្ងៃថ្មី និង Reset ចំនួន
+    function checkAndResetDaily() {
+        const today = new Date().toDateString();
+        const lastDate = localStorage.getItem('last_attendance_date');
+        
+        if (lastDate !== today) {
+            // ថ្ងៃថ្មី - reset ចំនួន
+            localStorage.setItem('checkin_count', '0');
+            localStorage.setItem('checkout_count', '0');
+            localStorage.setItem('last_attendance_date', today);
+        }
+    }
+
+    // ៤. ទាញចំនួនបច្ចុប្បន្ន
+    function getCount(type) {
+        const key = type === 'in' ? 'checkin_count' : 'checkout_count';
+        return parseInt(localStorage.getItem(key) || '0');
+    }
+
+    // ៥. កើនចំនួន
+    function incrementCount(type) {
+        const key = type === 'in' ? 'checkin_count' : 'checkout_count';
+        const current = getCount(type);
+        localStorage.setItem(key, (current + 1).toString());
+    }
+
+    // ៦. ធ្វើបច្ចុប្បន្នភាព UI
+    function updateUI() {
+        const checkinCount = getCount('in');
+        const checkoutCount = getCount('out');
+        
+        document.getElementById('checkinCount').textContent = `${checkinCount}/2`;
+        document.getElementById('checkoutCount').textContent = `${checkoutCount}/1`;
+        
+        // បិទប៊ូតុងប្រសិនបើដល់ដែនកំណត់
+        const inBtn = document.getElementById('inBtn');
+        const outBtn = document.getElementById('outBtn');
+        
+        if (checkinCount >= 2) {
+            inBtn.disabled = true;
+            inBtn.style.backgroundColor = '#ccc';
+        } else {
+            inBtn.disabled = false;
+            inBtn.style.backgroundColor = '#28a745';
+        }
+        
+        if (checkoutCount >= 1) {
+            outBtn.disabled = true;
+            outBtn.style.backgroundColor = '#ccc';
+        } else {
+            outBtn.disabled = false;
+            outBtn.style.backgroundColor = '#007bff';
+        }
+    }
+
+    // ៧. គណនាចម្ងាយរវាងពីរចំណុច (Haversine Formula)
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3; // Earth radius in meters
+        const φ1 = lat1 * Math.PI / 180;
+        const φ2 = lat2 * Math.PI / 180;
+        const Δφ = (lat2 - lat1) * Math.PI / 180;
+        const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                  Math.cos(φ1) * Math.cos(φ2) *
+                  Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+        return R * c; // Distance in meters
+    }
+
+    // ៨. ទទួល GPS Location
+    function getCurrentLocation() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject(new Error('GPS មិនដំណើរការ'));
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    resolve({
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    });
+                },
+                (error) => {
+                    let errorMsg = 'មិនអាចរកទីតាំង';
+                    if (error.code === 1) errorMsg = 'សូមអនុញ្ញាត GPS';
+                    else if (error.code === 2) errorMsg = 'GPS មិនដំណើរការ';
+                    else if (error.code === 3) errorMsg = 'GPS timeout';
+                    reject(new Error(errorMsg));
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        });
+    }
+
     async function sendAttendance(type) {
         const name = document.getElementById('staffName').value.trim();
         const role = document.getElementById('staffRole').value.trim();
         const phone = document.getElementById('staffPhone').value.trim();
         const statusDiv = document.getElementById('status');
+        const locationDiv = document.getElementById('locationStatus');
 
         if (!name || !role || !phone) {
             statusDiv.innerHTML = "<span style='color:orange'>⚠️ សូមបំពេញឱ្យគ្រប់!</span>";
             return;
         }
 
-        statusDiv.innerHTML = "<span style='color:#666'>⏳ កំពុងបញ្ជូន...</span>";
+        // ពិនិត្យដែនកំណត់
+        const isCheckin = type.includes('Check-In');
+        const countType = isCheckin ? 'in' : 'out';
+        const maxLimit = isCheckin ? 2 : 1;
+        const currentCount = getCount(countType);
+        
+        if (currentCount >= maxLimit) {
+            const limitText = isCheckin ? 'Check-In ២ដងរួច' : 'Check-Out ១ដងរួច';
+            statusDiv.innerHTML = `<span style='color:orange'>⚠️ អ្នកបាន${limitText}ថ្ងៃនេះហើយ!</span>`;
+            return;
+        }
 
-        const now = new Date();
-        const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-        const date = now.toLocaleDateString('km-KH');
-
-        const message = `🏢 <b>របាយការណ៍វត្តមាន</b>\n\n` +
-                        `👤 ឈ្មោះ: <b>${name}</b>\n` +
-                        `💼 តួនាទី: <b>${role}</b>\n` +
-                        `📞 លេខទូរស័ព្ទ: <code>${phone}</code>\n` +
-                        `📍 សកម្មភាព: <b>${type}</b>\n` +
-                        `⏰ ម៉ោង: <code>${time}</code>\n` +
-                        `📅 ថ្ងៃទី: <code>${date}</code>`;
+        statusDiv.innerHTML = "<span style='color:#666'>⏳ កំពុងពិនិត្យទីតាំង...</span>";
+        locationDiv.style.display = 'block';
 
         try {
+            // ទទួល GPS Location
+            const userLocation = await getCurrentLocation();
+            
+            // គណនាចម្ងាយ
+            const distance = calculateDistance(
+                OFFICE_LAT, OFFICE_LNG,
+                userLocation.lat, userLocation.lng
+            );
+
+            // បង្ហាញចម្ងាយ
+            document.getElementById('distanceText').textContent = `${Math.round(distance)}m ពីការិយាល័យ`;
+
+            // ពិនិត្យចម្ងាយ
+            if (distance > MAX_DISTANCE) {
+                statusDiv.innerHTML = `<span style='color:red'>❌ អ្នកនៅឆ្ងាយពេក! (${Math.round(distance)}m)<br>សូមនៅក្នុងរង្វង់ ${MAX_DISTANCE}m</span>`;
+                return;
+            }
+
+            // បញ្ជូនទៅ Telegram
+            statusDiv.innerHTML = "<span style='color:#666'>⏳ កំពុងបញ្ជូន...</span>";
+
+            const now = new Date();
+            const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            const date = now.toLocaleDateString('km-KH');
+            
+            const countDisplay = isCheckin ? `(ដងទី ${currentCount + 1})` : '';
+
+            const message = `🏢 <b>របាយការណ៍វត្តមាន</b>\n\n` +
+                            `👤 ឈ្មោះ: <b>${name}</b>\n` +
+                            `💼 តួនាទី: <b>${role}</b>\n` +
+                            `📞 លេខទូរស័ព្ទ: <code>${phone}</code>\n` +
+                            `📍 សកម្មភាព: <b>${type} ${countDisplay}</b>\n` +
+                            `⏰ ម៉ោង: <code>${time}</code>\n` +
+                            `📅 ថ្ងៃទី: <code>${date}</code>\n` +
+                            `🌍 ទីតាំង: <code>${Math.round(distance)}m ពីការិយាល័យ</code>\n` +
+                            `📌 GPS: <code>${userLocation.lat.toFixed(6)}, ${userLocation.lng.toFixed(6)}</code>`;
+
             const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -88,16 +257,18 @@
             });
 
             if (res.ok) {
+                incrementCount(countType);
+                updateUI();
                 statusDiv.innerHTML = "<span style='color:green'>✅ កត់ត្រាជោគជ័យ!</span>";
             } else {
                 statusDiv.innerHTML = "<span style='color:red'>❌ Error: Chat Not Found</span>";
             }
-        } catch (e) {
-            statusDiv.innerHTML = "<span style='color:red'>❌ បរាជ័យ! ឆែកអ៊ីនធឺណិត</span>";
+        } catch (error) {
+            locationDiv.style.display = 'none';
+            statusDiv.innerHTML = `<span style='color:red'>❌ ${error.message}</span>`;
         }
     }
 </script>
 
 </body>
 </html>
-
