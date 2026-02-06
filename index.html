@@ -17,8 +17,7 @@
         .counter { background: #f8f9fa; padding: 12px; border-radius: 10px; margin: 15px 0; font-size: 14px; }
         .counter-item { display: inline-block; margin: 0 10px; }
         .count { font-weight: bold; color: #28a745; font-size: 18px; }
-        .location-info { background: #e8f5e9; padding: 10px; border-radius: 8px; margin: 10px 0; font-size: 12px; color: #2e7d32; }
-        .distance { font-weight: bold; color: #1976d2; }
+        .warning-box { background: #fff3cd; border: 2px solid #ffc107; padding: 15px; border-radius: 10px; margin: 15px 0; color: #856404; font-size: 13px; }
     </style>
 </head>
 <body>
@@ -40,9 +39,10 @@
             Check-Out: <span class="count" id="checkoutCount">0/1</span>
         </div>
     </div>
-    
-    <div id="locationStatus" class="location-info" style="display:none;">
-        📍 ចម្ងាយ: <span class="distance" id="distanceText">...</span>
+
+    <div class="warning-box">
+        ⚠️ ត្រូវតែស្ថិតនៅក្នុងការិយាល័យ<br>
+        📱 សូមបើក GPS/Location
     </div>
     
     <button id="inBtn" class="btn btn-in" onclick="sendAttendance('Check-In 🟢')">Check-In</button>
@@ -55,10 +55,10 @@
     const TELEGRAM_BOT_TOKEN = '8242266919:AAGE6uMJ_-UvM-3KBZkJVFhJyTLvcTVW5tQ';
     const TELEGRAM_CHAT_ID = '-1003584563383'; 
 
-    // ទីតាំងការិយាល័យ (Office Location)
+    // ទីតាំងការិយាល័យ (Office Location) - ត្រូវតែស្ថិតនៅក្នុងរង្វង់នេះ
     const OFFICE_LAT = 11.615808345753639;
     const OFFICE_LNG = 104.9076275084756;
-    const MAX_DISTANCE = 200; // meters (200m radius)
+    const MAX_DISTANCE = 50; // meters (50m radius)
 
     // ១. មុខងារទាញទិន្នន័យមកបង្ហាញវិញ (Load Data)
     window.onload = () => {
@@ -66,7 +66,6 @@
         document.getElementById('staffRole').value = localStorage.getItem('s_role') || '';
         document.getElementById('staffPhone').value = localStorage.getItem('s_phone') || '';
         
-        // ពិនិត្យថ្ងៃថ្មី និងធ្វើការ reset
         checkAndResetDaily();
         updateUI();
     };
@@ -88,7 +87,6 @@
         const lastDate = localStorage.getItem('last_attendance_date');
         
         if (lastDate !== today) {
-            // ថ្ងៃថ្មី - reset ចំនួន
             localStorage.setItem('checkin_count', '0');
             localStorage.setItem('checkout_count', '0');
             localStorage.setItem('last_attendance_date', today);
@@ -116,7 +114,6 @@
         document.getElementById('checkinCount').textContent = `${checkinCount}/2`;
         document.getElementById('checkoutCount').textContent = `${checkoutCount}/1`;
         
-        // បិទប៊ូតុងប្រសិនបើដល់ដែនកំណត់
         const inBtn = document.getElementById('inBtn');
         const outBtn = document.getElementById('outBtn');
         
@@ -171,7 +168,7 @@
                 },
                 (error) => {
                     let errorMsg = 'មិនអាចរកទីតាំង';
-                    if (error.code === 1) errorMsg = 'សូមអនុញ្ញាត GPS';
+                    if (error.code === 1) errorMsg = 'សូមអនុញ្ញាត GPS Location';
                     else if (error.code === 2) errorMsg = 'GPS មិនដំណើរការ';
                     else if (error.code === 3) errorMsg = 'GPS timeout';
                     reject(new Error(errorMsg));
@@ -190,7 +187,6 @@
         const role = document.getElementById('staffRole').value.trim();
         const phone = document.getElementById('staffPhone').value.trim();
         const statusDiv = document.getElementById('status');
-        const locationDiv = document.getElementById('locationStatus');
 
         if (!name || !role || !phone) {
             statusDiv.innerHTML = "<span style='color:orange'>⚠️ សូមបំពេញឱ្យគ្រប់!</span>";
@@ -210,28 +206,24 @@
         }
 
         statusDiv.innerHTML = "<span style='color:#666'>⏳ កំពុងពិនិត្យទីតាំង...</span>";
-        locationDiv.style.display = 'block';
 
         try {
             // ទទួល GPS Location
             const userLocation = await getCurrentLocation();
             
-            // គណនាចម្ងាយ
+            // គណនាចម្ងាយពីការិយាល័យ
             const distance = calculateDistance(
                 OFFICE_LAT, OFFICE_LNG,
                 userLocation.lat, userLocation.lng
             );
 
-            // បង្ហាញចម្ងាយ
-            document.getElementById('distanceText').textContent = `${Math.round(distance)}m ពីការិយាល័យ`;
-
-            // ពិនិត្យចម្ងាយ
+            // ពិនិត្យថាតើនៅក្នុងរង្វង់ការិយាល័យឬអត់
             if (distance > MAX_DISTANCE) {
-                statusDiv.innerHTML = `<span style='color:red'>❌ អ្នកនៅឆ្ងាយពេក! (${Math.round(distance)}m)<br>សូមនៅក្នុងរង្វង់ ${MAX_DISTANCE}m</span>`;
+                statusDiv.innerHTML = `<span style='color:red'>❌ អ្នកមិននៅក្នុងការិយាល័យ!<br>សូម scan QR នៅការិយាល័យ</span>`;
                 return;
             }
 
-            // បញ្ជូនទៅ Telegram
+            // បញ្ជូនទៅ Telegram (មិនបង្ហាញ GPS និងចម្ងាយ)
             statusDiv.innerHTML = "<span style='color:#666'>⏳ កំពុងបញ្ជូន...</span>";
 
             const now = new Date();
@@ -240,15 +232,14 @@
             
             const countDisplay = isCheckin ? `(ដងទី ${currentCount + 1})` : '';
 
+            // សារដែលបញ្ជូនទៅ Telegram (គ្មាន GPS និង ចម្ងាយ)
             const message = `🏢 <b>របាយការណ៍វត្តមាន</b>\n\n` +
                             `👤 ឈ្មោះ: <b>${name}</b>\n` +
                             `💼 តួនាទី: <b>${role}</b>\n` +
                             `📞 លេខទូរស័ព្ទ: <code>${phone}</code>\n` +
                             `📍 សកម្មភាព: <b>${type} ${countDisplay}</b>\n` +
                             `⏰ ម៉ោង: <code>${time}</code>\n` +
-                            `📅 ថ្ងៃទី: <code>${date}</code>\n` +
-                            `🌍 ទីតាំង: <code>${Math.round(distance)}m ពីការិយាល័យ</code>\n` +
-                            `📌 GPS: <code>${userLocation.lat.toFixed(6)}, ${userLocation.lng.toFixed(6)}</code>`;
+                            `📅 ថ្ងៃទី: <code>${date}</code>`;
 
             const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
                 method: 'POST',
@@ -264,12 +255,10 @@
                 statusDiv.innerHTML = "<span style='color:red'>❌ Error: Chat Not Found</span>";
             }
         } catch (error) {
-            locationDiv.style.display = 'none';
-            statusDiv.innerHTML = `<span style='color:red'>❌ ${error.message}</span>`;
+            statusDiv.innerHTML = `<span style='color:red'>❌ ${error.message}<br>សូមបើក GPS/Location</span>`;
         }
     }
 </script>
 
 </body>
 </html>
-
