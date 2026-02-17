@@ -5,95 +5,82 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Staff Attendance System</title>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 380px; text-align: center; }
-        h2 { color: #333; margin-bottom: 20px; text-transform: uppercase; }
-        input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; text-align: center; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 12px; color: white; transition: 0.3s; font-size: 18px; }
-        .btn-in { background-color: #28a745; }
-        .btn-out { background-color: #007bff; }
-        .btn:disabled { background-color: #ccc; cursor: not-allowed; opacity: 0.6; }
-        #status { margin-top: 15px; font-size: 14px; min-height: 20px; }
-        .counter { background: #f8f9fa; padding: 12px; border-radius: 10px; margin: 15px 0; font-size: 14px; }
-        .counter-item { display: inline-block; margin: 0 10px; }
-        .count { font-weight: bold; color: #28a745; font-size: 18px; }
-        .warning-box { background: #fff3cd; border: 2px solid #ffc107; padding: 15px; border-radius: 10px; margin: 15px 0; color: #856404; font-size: 13px; }
-        .time-info { background: #e3f2fd; padding: 10px; border-radius: 8px; margin: 10px 0; font-size: 12px; color: #1976d2; }
-        .holiday-notice { background: #ffebee; border: 2px solid #f44336; padding: 20px; border-radius: 10px; margin: 15px 0; color: #c62828; font-size: 16px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #1a1a2e, #16213e); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); width: 100%; max-width: 400px; text-align: center; }
+        h2 { color: #1a1a2e; margin-bottom: 5px; font-size: 22px; }
+        .subtitle { color: #888; font-size: 13px; margin-bottom: 20px; }
+        input, select { width: 100%; padding: 13px; margin: 6px 0; border: 1.5px solid #e0e0e0; border-radius: 10px; font-size: 15px; text-align: center; outline: none; transition: 0.2s; }
+        input:focus, select:focus { border-color: #4e73df; }
+        .save-note { font-size: 11px; color: #aaa; margin: 5px 0 15px; }
+        .time-info { background: #e8f4fd; padding: 12px; border-radius: 10px; margin: 12px 0; font-size: 12px; color: #1976d2; line-height: 1.8; }
+        .counter { display: flex; justify-content: center; gap: 20px; background: #f8f9fc; padding: 12px; border-radius: 10px; margin: 12px 0; }
+        .counter-item { font-size: 13px; color: #555; }
+        .count { font-weight: bold; color: #28a745; font-size: 20px; display: block; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 10px; color: white; font-size: 17px; transition: 0.2s; }
+        .btn:active { transform: scale(0.97); }
+        .btn-in { background: linear-gradient(135deg, #28a745, #20c997); }
+        .btn-out { background: linear-gradient(135deg, #007bff, #6610f2); }
+        .btn-summary { background: linear-gradient(135deg, #fd7e14, #e83e8c); }
+        .btn:disabled { background: #ccc !important; cursor: not-allowed; }
+        #status { margin-top: 15px; font-size: 14px; min-height: 20px; padding: 8px; border-radius: 8px; }
+        .admin-section { border-top: 2px dashed #eee; margin-top: 20px; padding-top: 20px; }
+        .admin-title { font-size: 13px; color: #aaa; margin-bottom: 10px; }
+        .warning-box { background: #fff8e1; border: 1.5px solid #ffc107; padding: 12px; border-radius: 10px; margin: 12px 0; color: #856404; font-size: 12px; }
     </style>
 </head>
 <body>
+<div class="container">
+    <h2>🏢 Staff Attendance</h2>
+    <p class="subtitle">MIKIDS School</p>
 
-<div class="container" id="mainContainer">
-    <h2>Staff Attendance</h2>
-    
-    <input type="text" id="staffName" placeholder="Enter your FullName" oninput="saveData()">
-    <input type="text" id="staffRole" placeholder="Enter your Role" oninput="saveData()">
-    <input type="text" id="staffPhone" placeholder="Enter your PhoneNumber" oninput="saveData()">
-    
-    <p style="font-size: 11px; color: #888; margin: 15px 0;">បំពេញតែម្ដង វានឹងចងចាំជាប់រហូត</p>
-    
+    <input type="text" id="staffName" placeholder="ឈ្មោះពេញ (Full Name)" oninput="saveData()">
+    <input type="text" id="staffRole" placeholder="តួនាទី (Role)" oninput="saveData()">
+    <input type="text" id="staffPhone" placeholder="លេខទូរស័ព្ទ (Phone)" oninput="saveData()">
+    <p class="save-note">✨ បំពេញតែម្ដង — វានឹងចងចាំជាប់រហូត</p>
+
     <div class="time-info" id="scheduleInfo">
-        ⏰ ម៉ោងចូល: 7:00 AM<br>
-        ⚠️ យឺតប្រសិនបើ Check-In លើសពី 7:05 AM<br>
-        🌙 ស្គេនដងទី2: យឺតចាប់ពី 1:01 PM<br>
-        📊 របាយការណ៍ស្វ័យប្រវត្តិ: 8:50 AM
+        ⏰ ចូល: 7:00 AM | យឺតចាប់: 7:05 AM<br>
+        🌙 ស្គេនទី2: យឺតចាប់ 1:01 PM<br>
+        📊 Auto Summary: 8:50 AM
     </div>
-    
+
     <div class="counter">
         <div class="counter-item">
-            Check-In: <span class="count" id="checkinCount">0/2</span>
+            <span class="count" id="checkinCount">0/2</span>
+            Check-In
         </div>
         <div class="counter-item">
-            Check-Out: <span class="count" id="checkoutCount">0/1</span>
+            <span class="count" id="checkoutCount" style="color:#007bff">0/1</span>
+            Check-Out
         </div>
     </div>
 
     <div class="warning-box">
-        ⚠️ ត្រូវតែស្ថិតនៅក្នុងការិយាល័យ (10000m)<br>
-        📱 សូមបើក GPS/Location
+        📍 ត្រូវស្ថិតនៅក្នុងការិយាល័យ (10km)<br>
+        📱 សូមបើក GPS/Location ជាមុន
     </div>
-    
-    <button id="inBtn" class="btn btn-in" onclick="sendAttendance('Check-In 🟢')">Check-In</button>
-    <button id="outBtn" class="btn btn-out" onclick="sendAttendance('Check-Out 🔵')">Check-Out</button>
-    
+
+    <button id="inBtn" class="btn btn-in" onclick="sendAttendance('Check-In 🟢')">✅ Check-In</button>
+    <button id="outBtn" class="btn btn-out" onclick="sendAttendance('Check-Out 🔵')">🔵 Check-Out</button>
+
     <div id="status"></div>
+
+    <!-- Admin Section -->
+    <div class="admin-section">
+        <p class="admin-title">🔐 Admin Panel</p>
+        <button class="btn btn-summary" onclick="adminSendSummary()">
+            📊 ផ្ញើ Summary ទៅ Telegram
+        </button>
+    </div>
 </div>
 
 <script>
     const TELEGRAM_BOT_TOKEN = '8242266919:AAGE6uMJ_-UvM-3KBZkJVFhJyTLvcTVW5tQ';
     const TELEGRAM_CHAT_ID = -1003584563383;
-
     const OFFICE_LAT = 11.615808345753639;
     const OFFICE_LNG = 104.9076275084756;
     const MAX_DISTANCE = 10000;
-
-    const SCHEDULE = {
-        weekday: {
-            workStartHour: 7,
-            workStartMinute: 0,
-            // ស្គេនដំបូង: យឺតចាប់ពី 7:05 AM
-            lateStartHour: 7,
-            lateStartMinute: 5,
-            // ស្គេនដងទី2: យឺតចាប់ពី 1:01 PM
-            lateStart2Hour: 13,
-            lateStart2Minute: 1,
-            reportHour: 8,
-            reportMinute: 50
-        },
-        saturday: {
-            workStartHour: 8,
-            workStartMinute: 30,
-            lateStartHour: 8,
-            lateStartMinute: 30,
-            // ស្គេនដងទី2 សៅរ៍: យឺតចាប់ពី 1:01 PM ដូចគ្នា
-            lateStart2Hour: 13,
-            lateStart2Minute: 1,
-            reportHour: 9,
-            reportMinute: 30
-        }
-    };
-
     const TOTAL_STAFF = 16;
 
     const ALL_STAFF_NAMES = [
@@ -103,50 +90,30 @@
         "កុសល សៀកម៉េង", "វ៉ាត មួយសុាំង", "ឈឹមវ៉ាន លីហង្ស", "Dorn Sreyneth"
     ];
 
-    function getTodaySchedule() {
-        const today = new Date();
-        const dayOfWeek = today.getDay();
-        if (dayOfWeek === 6) return SCHEDULE.saturday;
-        return SCHEDULE.weekday;
-    }
-    
-    function shouldSendReport() {
-        return new Date().getDay() !== 0;
-    }
-
-    function updateScheduleInfo() {
-        const scheduleInfo = document.getElementById('scheduleInfo');
-        const dayOfWeek = new Date().getDay();
-        
-        if (dayOfWeek === 0) {
-            scheduleInfo.innerHTML = `
-                ⏰ ម៉ោងចូល: 7:00 AM (ថ្ងៃអាទិត្យ)<br>
-                ⚠️ យឺតប្រសិនបើ Check-In លើសពី 7:05 AM<br>
-                🌙 ស្គេនដងទី2: យឺតចាប់ពី 1:01 PM<br>
-                📊 គ្មានរបាយការណ៍ស្វ័យប្រវត្តិ
-            `;
-        } else if (dayOfWeek === 6) {
-            scheduleInfo.innerHTML = `
-                ⏰ ម៉ោងចូល: 8:30 AM (ថ្ងៃសៅរ៍)<br>
-                ⚠️ យឺតប្រសិនបើ Check-In លើសពី 8:30 AM<br>
-                🌙 ស្គេនដងទី2: យឺតចាប់ពី 1:01 PM<br>
-                📊 របាយការណ៍ស្វ័យប្រវត្តិ: 9:30 AM
-            `;
-        } else {
-            scheduleInfo.innerHTML = `
-                ⏰ ម៉ោងចូល: 7:00 AM<br>
-                ⚠️ យឺតប្រសិនបើ Check-In លើសពី 7:05 AM<br>
-                🌙 ស្គេនដងទី2: យឺតចាប់ពី 1:01 PM<br>
-                📊 របាយការណ៍ស្វ័យប្រវត្តិ: 8:50 AM
-            `;
+    const SCHEDULE = {
+        weekday: {
+            lateH: 7, lateM: 5,          // ស្គេន១: យឺតចាប់ 7:05 AM
+            late2H: 13, late2M: 1,        // ស្គេន២: យឺតចាប់ 1:01 PM
+            reportH: 8, reportMin: 50,    // 🌅 Summary ព្រឹក: 8:50 AM
+            report2H: 14, report2Min: 30  // 🌆 Summary រសៀល: 2:30 PM
+        },
+        saturday: {
+            lateH: 8, lateM: 30,          // ស្គេន១: យឺតចាប់ 8:30 AM
+            late2H: 13, late2M: 1,        // ស្គេន២: យឺតចាប់ 1:01 PM (បើមាន)
+            reportH: 9, reportMin: 30,    // 🌅 Summary ព្រឹក: 9:30 AM
+            report2H: null, report2Min: null  // ❌ គ្មាន Summary រសៀល
         }
+    };
+
+    function getSchedule() {
+        return new Date().getDay() === 6 ? SCHEDULE.saturday : SCHEDULE.weekday;
     }
 
+    // ========== INIT ==========
     window.onload = () => {
         document.getElementById('staffName').value = localStorage.getItem('s_name') || '';
         document.getElementById('staffRole').value = localStorage.getItem('s_role') || '';
         document.getElementById('staffPhone').value = localStorage.getItem('s_phone') || '';
-        
         checkAndResetDaily();
         updateUI();
         updateScheduleInfo();
@@ -161,195 +128,229 @@
 
     function checkAndResetDaily() {
         const today = new Date().toDateString();
-        const lastDate = localStorage.getItem('last_attendance_date');
-        
-        if (lastDate !== today) {
+        if (localStorage.getItem('last_date') !== today) {
             localStorage.setItem('checkin_count', '0');
             localStorage.setItem('checkout_count', '0');
-            localStorage.setItem('last_attendance_date', today);
-            localStorage.removeItem('late_staff_today');
-            localStorage.removeItem('checkin_staff_list');
-            localStorage.removeItem('late_summary_sent');
+            localStorage.setItem('last_date', today);
+            localStorage.removeItem('auto_summary_am_sent');
+            localStorage.removeItem('auto_summary_pm_sent');
         }
     }
 
-    function getCount(type) {
-        const key = type === 'in' ? 'checkin_count' : 'checkout_count';
-        return parseInt(localStorage.getItem(key) || '0');
-    }
-
-    function incrementCount(type) {
-        const key = type === 'in' ? 'checkin_count' : 'checkout_count';
-        localStorage.setItem(key, (getCount(type) + 1).toString());
-    }
+    function getCount(type) { return parseInt(localStorage.getItem(type === 'in' ? 'checkin_count' : 'checkout_count') || '0'); }
+    function incCount(type) { localStorage.setItem(type === 'in' ? 'checkin_count' : 'checkout_count', getCount(type) + 1); }
 
     function updateUI() {
-        const checkinCount = getCount('in');
-        const checkoutCount = getCount('out');
-        
-        document.getElementById('checkinCount').textContent = `${checkinCount}/2`;
-        document.getElementById('checkoutCount').textContent = `${checkoutCount}/1`;
-        
-        const inBtn = document.getElementById('inBtn');
-        const outBtn = document.getElementById('outBtn');
-        
-        inBtn.disabled = checkinCount >= 2;
-        inBtn.style.backgroundColor = checkinCount >= 2 ? '#ccc' : '#28a745';
-        
-        outBtn.disabled = checkoutCount >= 1;
-        outBtn.style.backgroundColor = checkoutCount >= 1 ? '#ccc' : '#007bff';
+        const ci = getCount('in'), co = getCount('out');
+        document.getElementById('checkinCount').textContent = `${ci}/2`;
+        document.getElementById('checkoutCount').textContent = `${co}/1`;
+        document.getElementById('inBtn').disabled = ci >= 2;
+        document.getElementById('outBtn').disabled = co >= 1;
     }
 
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371e3;
-        const φ1 = lat1 * Math.PI / 180;
-        const φ2 = lat2 * Math.PI / 180;
-        const Δφ = (lat2 - lat1) * Math.PI / 180;
-        const Δλ = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(Δφ/2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) ** 2;
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    function updateScheduleInfo() {
+        const d = new Date().getDay();
+        const info = document.getElementById('scheduleInfo');
+        if (d === 6) {
+            info.innerHTML = `⏰ ចូល: 8:30 AM (សៅរ៍) | យឺតចាប់: 8:30 AM<br>🌙 ស្គេនទី2: យឺតចាប់ 1:01 PM<br>📊 Auto Summary: 9:30 AM`;
+        } else if (d === 0) {
+            info.innerHTML = `⏰ ចូល: 7:00 AM (អាទិត្យ)<br>🌙 ស្គេនទី2: យឺតចាប់ 1:01 PM<br>📊 គ្មាន Auto Summary`;
+        } else {
+            info.innerHTML = `⏰ ចូល: 7:00 AM | យឺតចាប់: 7:05 AM<br>🌙 ស្គេនទី2: យឺតចាប់ 1:01 PM<br>📊 Auto Summary: 8:50 AM`;
+        }
     }
 
-    function getCurrentLocation() {
-        return new Promise((resolve, reject) => {
-            if (!navigator.geolocation) { reject(new Error('GPS មិនដំណើរការ')); return; }
+    // ========== LOCATION ==========
+    function getLocation() {
+        return new Promise((res, rej) => {
+            if (!navigator.geolocation) return rej(new Error('GPS មិនដំណើរការ'));
             navigator.geolocation.getCurrentPosition(
-                (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
-                (err) => {
-                    const msgs = { 1: 'Open GPS Location', 2: 'GPS មិនដំណើរការ', 3: 'GPS timeout' };
-                    reject(new Error(msgs[err.code] || 'មិនអាចរកទីតាំង'));
-                },
+                p => res({ lat: p.coords.latitude, lng: p.coords.longitude }),
+                e => rej(new Error(e.code === 1 ? 'សូមបើក GPS Location' : 'GPS Error')),
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         });
     }
 
-    // ========== គណនានាទីយឺត ==========
-    // scanNumber: 1 = ស្គេនដំបូង (ព្រឹក), 2 = ស្គេនដងទី2 (រសៀល)
-    function calculateLateMinutes(scanNumber) {
-        const schedule = getTodaySchedule();
-        const now = new Date();
-        const lateStart = new Date();
+    function calcDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3, φ1 = lat1*Math.PI/180, φ2 = lat2*Math.PI/180;
+        const Δφ = (lat2-lat1)*Math.PI/180, Δλ = (lon2-lon1)*Math.PI/180;
+        const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
 
-        if (scanNumber === 2) {
-            // ស្គេនដងទី2: យឺតចាប់ពី 1:01 PM
-            lateStart.setHours(schedule.lateStart2Hour, schedule.lateStart2Minute, 0, 0);
+    // ========== LATE CALCULATION ==========
+    function calcLate(scanNumber) {
+        const s = getSchedule(), now = new Date(), ref = new Date();
+        if (scanNumber === 2) ref.setHours(s.late2H, s.late2M, 0, 0);
+        else ref.setHours(s.lateH, s.lateM, 0, 0);
+        return now > ref ? Math.floor((now - ref) / 60000) : 0;
+    }
+
+    function fmtLate(mins) {
+        if (!mins) return 'មកទាន់ម៉ោង ✅';
+        const h = Math.floor(mins/60), m = mins%60;
+        return h ? (m ? `${h}ម៉ោង ${m}នាទី` : `${h}ម៉ោង`) : `${m}នាទី`;
+    }
+
+    // ========== TELEGRAM ==========
+    async function sendTelegram(text) {
+        try {
+            await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text, parse_mode: 'HTML' })
+            });
+        } catch(e) { console.error(e); }
+    }
+
+    // ========== READ TELEGRAM TO BUILD SUMMARY ==========
+    async function buildSummaryFromTelegram() {
+        const statusDiv = document.getElementById('status');
+        statusDiv.innerHTML = "<span style='color:#666'>⏳ កំពុងទាញទិន្នន័យពី Telegram...</span>";
+
+        try {
+            // ទាញ messages ថ្ងៃនេះពី Telegram
+            const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?limit=100&offset=-100`);
+            const data = await res.json();
+
+            const today = new Date().toDateString();
+            const checkedInStaff = {}; // { name: { role, time, lateMinutes, scanNumber } }
+
+            if (data.ok && data.result) {
+                data.result.forEach(update => {
+                    const msg = update.message;
+                    if (!msg || !msg.text) return;
+
+                    const msgDate = new Date(msg.date * 1000);
+                    if (msgDate.toDateString() !== today) return;
+
+                    const text = msg.text;
+
+                    // Parse Check-In messages
+                    if (text.includes('Check-In')) {
+                        // ស្វែងរកឈ្មោះ
+                        const nameMatch = text.match(/ឈ្មោះ[:\s]+(.+)/);
+                        const roleMatch = text.match(/តួនាទី[:\s]+(.+)/);
+                        const timeMatch = text.match(/ម៉ោង[:\s]+(.+)/);
+                        const lateMatch = text.match(/យឺត[:\s]+([^\n]+)/);
+                        const scan2 = text.includes('ស្គេនដងទី 2') || text.includes('ស្គេនទី2');
+
+                        if (nameMatch) {
+                            const name = nameMatch[1].trim();
+                            const role = roleMatch ? roleMatch[1].trim() : '';
+                            const time = timeMatch ? timeMatch[1].trim() : '';
+                            const lateText = lateMatch ? lateMatch[1].trim() : '';
+                            const isLate = lateText && !lateText.includes('ទាន់');
+
+                            // រក្សាទុកតែ Check-In ដំបូង (scan 1) សម្រាប់ summary
+                            if (!scan2 && !checkedInStaff[name]) {
+                                checkedInStaff[name] = { role, time, lateText: isLate ? lateText : '', isLate };
+                            }
+                        }
+                    }
+                });
+            }
+
+            return checkedInStaff;
+        } catch(e) {
+            console.error(e);
+            return {};
+        }
+    }
+
+    // ========== SEND SUMMARY ==========
+    async function sendSummary(checkedInStaff, sessionLabel = '📊 Summary') {
+        const today = new Date().toLocaleDateString('km-KH');
+        const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        const dayOfWeek = new Date().getDay();
+        const dayName = dayOfWeek === 6 ? 'សៅរ៍' : (dayOfWeek === 0 ? 'អាទិត្យ' : 'ធម្មតា');
+
+        const presentNames = Object.keys(checkedInStaff);
+        const absentStaff = ALL_STAFF_NAMES.filter(n => !presentNames.includes(n));
+        const lateStaff = Object.entries(checkedInStaff).filter(([_, v]) => v.isLate);
+        const onTimeCount = presentNames.length - lateStaff.length;
+        const rate = ((presentNames.length / TOTAL_STAFF) * 100).toFixed(1);
+
+        let msg = `━━━━━━━━━━━━━━━━━━━\n`;
+        msg += `${sessionLabel} <b>ថ្ងៃ${dayName}</b>\n`;
+        msg += `📅 <b>${today}</b> | ⏰ <b>${now}</b>\n`;
+        msg += `━━━━━━━━━━━━━━━━━━━\n\n`;
+        msg += `👥 <b>សរុប:</b> ${TOTAL_STAFF} នាក់\n`;
+        msg += `✅ <b>វត្តមាន:</b> ${presentNames.length} នាក់ (${rate}%)\n`;
+        msg += `❌ <b>អវត្តមាន:</b> ${absentStaff.length} នាក់\n`;
+        msg += `⏰ <b>ទាន់ម៉ោង:</b> ${onTimeCount} នាក់\n`;
+        msg += `⚠️ <b>យឺត:</b> ${lateStaff.length} នាក់\n\n`;
+
+        if (lateStaff.length > 0) {
+            msg += `━━━━━━━━━━━━━━━━━━━\n`;
+            msg += `⚠️ <b>បុគ្គលិកមកយឺត:</b>\n\n`;
+            lateStaff.forEach(([name, info], i) => {
+                const emoji = info.lateText.includes('ម៉ោង') ? '🔴' : '🟠';
+                msg += `${emoji} <b>${i+1}. ${name}</b>\n`;
+                msg += `   💼 ${info.role}\n`;
+                msg += `   ⏰ យឺត: <b>${info.lateText}</b>\n`;
+                msg += `   🕐 មកដល់: ${info.time}\n\n`;
+            });
         } else {
-            // ស្គេនដំបូង: យឺតចាប់ពី 7:05 AM (ឬ 8:30 AM សៅរ៍)
-            lateStart.setHours(schedule.lateStartHour, schedule.lateStartMinute, 0, 0);
+            msg += `━━━━━━━━━━━━━━━━━━━\n`;
+            msg += `🏆 <b>គ្មាននរណាមកយឺតទេ!</b>\n\n`;
         }
 
-        if (now > lateStart) {
-            return Math.floor((now - lateStart) / 60000);
+        if (absentStaff.length > 0) {
+            msg += `━━━━━━━━━━━━━━━━━━━\n`;
+            msg += `❌ <b>អវត្តមាន (${absentStaff.length} នាក់):</b>\n\n`;
+            absentStaff.forEach((name, i) => { msg += `${i+1}. ${name}\n`; });
+        } else {
+            msg += `━━━━━━━━━━━━━━━━━━━\n`;
+            msg += `🎉 <b>បុគ្គលិកទាំងអស់វត្តមាន!</b>\n`;
         }
-        return 0;
+
+        await sendTelegram(msg);
     }
 
-    function formatLateTime(minutes) {
-        if (minutes === 0) return 'មកទាន់ម៉ោង';
-        const hours = Math.floor(minutes / 60);
-        const mins = minutes % 60;
-        if (hours === 0) return `${mins} នាទី`;
-        if (mins === 0) return `${hours} ម៉ោង`;
-        return `${hours} ម៉ោង ${mins} នាទី`;
+    // ========== ADMIN BUTTON ==========
+    async function adminSendSummary() {
+        const statusDiv = document.getElementById('status');
+        const h = new Date().getHours();
+        const label = h < 12 ? '🌅 Summary ព្រឹក' : '🌆 Summary រសៀល';
+        const checkedInStaff = await buildSummaryFromTelegram();
+        await sendSummary(checkedInStaff, label);
+        statusDiv.innerHTML = "<span style='color:green'>✅ បានផ្ញើ Summary ទៅ Telegram!</span>";
     }
 
-    function trackLateStaff(name, role, lateMinutes, time, scanNumber) {
-        let lateStaff = JSON.parse(localStorage.getItem('late_staff_today') || '[]');
-        if (lateMinutes > 0) {
-            lateStaff.push({ name, role, lateMinutes, lateTime: formatLateTime(lateMinutes), time, scanNumber });
-            localStorage.setItem('late_staff_today', JSON.stringify(lateStaff));
-        }
-    }
-
-    function addCheckinStaff(name, role, time, isLate) {
-        let checkinList = JSON.parse(localStorage.getItem('checkin_staff_list') || '[]');
-        if (!checkinList.find(s => s.name === name)) {
-            checkinList.push({ name, role, time, isLate });
-            localStorage.setItem('checkin_staff_list', JSON.stringify(checkinList));
-        }
-    }
-
-    function getAbsentStaff() {
-        const checkinNames = JSON.parse(localStorage.getItem('checkin_staff_list') || '[]').map(s => s.name);
-        return ALL_STAFF_NAMES.filter(name => !checkinNames.includes(name));
-    }
-
+    // ========== AUTO REPORT TIMER ==========
     function startAutoReportTimer() {
-        setInterval(() => {
-            if (!shouldSendReport()) return;
-            const schedule = getTodaySchedule();
+        setInterval(async () => {
+            const d = new Date().getDay();
+            if (d === 0) return; // មិនផ្ញើថ្ងៃអាទិត្យ
+            
+            const s = getSchedule();
             const now = new Date();
-            if (now.getHours() === schedule.reportHour && now.getMinutes() === schedule.reportMinute) {
-                if (localStorage.getItem('late_summary_sent') !== 'true') {
-                    sendLateStaffSummary();
+            const h = now.getHours();
+            const m = now.getMinutes();
+
+            // 🌅 Summary ព្រឹក (8:50 AM ច័ន្ទ-សុក្រ | 9:30 AM សៅរ៍)
+            if (h === s.reportH && m === s.reportMin) {
+                if (localStorage.getItem('auto_summary_am_sent') !== 'true') {
+                    localStorage.setItem('auto_summary_am_sent', 'true');
+                    const staff = await buildSummaryFromTelegram();
+                    await sendSummary(staff, '🌅 Summary ព្រឹក');
+                }
+            }
+
+            // 🌆 Summary រសៀល (2:30 PM ច័ន្ទ-សុក្រ)
+            if (s.report2H !== null && h === s.report2H && m === s.report2Min) {
+                if (localStorage.getItem('auto_summary_pm_sent') !== 'true') {
+                    localStorage.setItem('auto_summary_pm_sent', 'true');
+                    const staff = await buildSummaryFromTelegram();
+                    await sendSummary(staff, '🌆 Summary រសៀល');
                 }
             }
         }, 60000);
     }
 
-    async function sendLateStaffSummary() {
-        if (localStorage.getItem('late_summary_sent') === 'true') return;
-
-        const lateStaff = JSON.parse(localStorage.getItem('late_staff_today') || '[]');
-        const checkinList = JSON.parse(localStorage.getItem('checkin_staff_list') || '[]');
-        const absentStaff = getAbsentStaff();
-        const dayOfWeek = new Date().getDay();
-        const dayName = dayOfWeek === 6 ? 'សៅរ៍' : 'ធម្មតា';
-        const today = new Date().toLocaleDateString('km-KH');
-
-        const totalPresent = checkinList.length;
-        const totalLate = lateStaff.length;
-        const totalAbsent = absentStaff.length;
-        const totalOnTime = totalPresent - totalLate;
-        const attendanceRate = ((totalPresent / TOTAL_STAFF) * 100).toFixed(1);
-
-        let message = `━━━━━━━━━━━━━━━━━━━\n`;
-        message += `📊 <b>របាយការណ៍វត្តមាន ថ្ងៃ${dayName}</b>\n`;
-        message += `📅 <b>${today}</b>\n`;
-        message += `━━━━━━━━━━━━━━━━━━━\n\n`;
-        message += `👥 <b>សរុប:</b> ${TOTAL_STAFF} នាក់\n`;
-        message += `✅ <b>វត្តមាន:</b> ${totalPresent} នាក់ (${attendanceRate}%)\n`;
-        message += `❌ <b>អវត្តមាន:</b> ${totalAbsent} នាក់\n`;
-        message += `⏰ <b>មកទាន់ម៉ោង:</b> ${totalOnTime} នាក់\n`;
-        message += `⚠️ <b>មកយឺត:</b> ${totalLate} នាក់\n\n`;
-
-        if (lateStaff.length > 0) {
-            message += `━━━━━━━━━━━━━━━━━━━\n`;
-            message += `⚠️ <b>បុគ្គលិកមកយឺត:</b>\n\n`;
-            lateStaff.sort((a, b) => b.lateMinutes - a.lateMinutes);
-            lateStaff.forEach((staff, index) => {
-                const emoji = staff.lateMinutes > 120 ? '🔴' : staff.lateMinutes > 60 ? '🟡' : '🟠';
-                const scanLabel = staff.scanNumber === 2 ? ' (ស្គេន២)' : ' (ស្គេន១)';
-                message += `${emoji} <b>${index + 1}. ${staff.name}</b>${scanLabel}\n`;
-                message += `   💼 តួនាទី: ${staff.role}\n`;
-                message += `   ⚠️ យឺត: <b>${staff.lateTime}</b>\n`;
-                message += `   🕐 មកដល់: ${staff.time}\n\n`;
-            });
-            message += `🟠 < 1ម៉ោង | 🟡 1-2ម៉ោង | 🔴 > 2ម៉ោង\n`;
-        } else {
-            message += `━━━━━━━━━━━━━━━━━━━\n`;
-            message += `✅ <b>ល្អប្រសើរ!</b> គ្មាននរណាមកយឺតទេ\n`;
-        }
-
-        if (absentStaff.length > 0) {
-            message += `\n━━━━━━━━━━━━━━━━━━━\n`;
-            message += `❌ <b>បុគ្គលិកអវត្តមាន (${totalAbsent} នាក់):</b>\n\n`;
-            absentStaff.forEach((name, i) => { message += `${i+1}. ${name}\n`; });
-        } else {
-            message += `\n━━━━━━━━━━━━━━━━━━━\n`;
-            message += `🎉 <b>ល្អឥតខ្ចោះ!</b> បុគ្គលិកទាំងអស់វត្តមាន\n`;
-        }
-
-        await sendTelegramMessage(message);
-        localStorage.setItem('late_summary_sent', 'true');
-    }
-
-    async function sendTelegramMessage(message) {
-        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${encodeURIComponent(message)}&parse_mode=HTML`;
-        await fetch(url, { method: 'GET', mode: 'no-cors' });
-    }
-
+    // ========== CHECK-IN / CHECK-OUT ==========
     async function sendAttendance(type) {
         const name = document.getElementById('staffName').value.trim();
         const role = document.getElementById('staffRole').value.trim();
@@ -357,90 +358,69 @@
         const statusDiv = document.getElementById('status');
 
         if (!name || !role || !phone) {
-            statusDiv.innerHTML = "<span style='color:orange'>⚠️ សូមបំពេញឱ្យគ្រប់!</span>";
+            statusDiv.innerHTML = "<span style='color:orange'>⚠️ សូមបំពេញព័ត៌មានឲ្យគ្រប់!</span>";
             return;
         }
 
         const isCheckin = type.includes('Check-In');
         const countType = isCheckin ? 'in' : 'out';
         const maxLimit = isCheckin ? 2 : 1;
-        const currentCount = getCount(countType);
 
-        if (currentCount >= maxLimit) {
-            const limitText = isCheckin ? 'Check-In ២ដងរួច' : 'Check-Out ១ដងរួច';
-            statusDiv.innerHTML = `<span style='color:orange'>⚠️ អ្នកបាន${limitText}ថ្ងៃនេះហើយ!</span>`;
+        if (getCount(countType) >= maxLimit) {
+            statusDiv.innerHTML = `<span style='color:orange'>⚠️ អ្នកបាន${isCheckin ? 'Check-In ២ដង' : 'Check-Out ១ដង'}រួចហើយ!</span>`;
             return;
         }
 
-        statusDiv.innerHTML = "<span style='color:#666'>⏳ កំពុងពិនិត្យទីតាំង...</span>";
+        statusDiv.innerHTML = "<span style='color:#666'>📍 កំពុងពិនិត្យទីតាំង...</span>";
 
         try {
-            const userLocation = await getCurrentLocation();
-            const distance = calculateDistance(OFFICE_LAT, OFFICE_LNG, userLocation.lat, userLocation.lng);
+            const loc = await getLocation();
+            const dist = calcDistance(OFFICE_LAT, OFFICE_LNG, loc.lat, loc.lng);
 
-            if (distance > MAX_DISTANCE) {
-                statusDiv.innerHTML = `<span style='color:red'>❌ អ្នកមិននៅក្នុងការិយាល័យ!<br>ចម្ងាយ: ${Math.round(distance)} ម៉ែត្រ</span>`;
+            if (dist > MAX_DISTANCE) {
+                statusDiv.innerHTML = `<span style='color:red'>❌ ចម្ងាយពីការិយាល័យ: ${Math.round(dist)}m<br>ត្រូវស្ថិតក្នុង ${MAX_DISTANCE}m</span>`;
                 return;
             }
 
-            statusDiv.innerHTML = "<span style='color:#666'>⏳ កំពុងបញ្ជូន...</span>";
+            statusDiv.innerHTML = "<span style='color:#666'>📤 កំពុងផ្ញើ...</span>";
 
             const now = new Date();
             const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
             const date = now.toLocaleDateString('km-KH');
-            const dayOfWeek = now.getDay();
-            const dayLabel = dayOfWeek === 6 ? ' - សៅរ៍' : '';
+            const scanNum = isCheckin ? getCount('in') + 1 : null;
 
-            let lateMinutes = 0;
             let lateStatus = '';
-            let isLate = false;
-
             if (isCheckin) {
-                // ស្គេនដំបូង (currentCount === 0) → ពិនិត្យ 7:05 AM
-                // ស្គេនដងទី2 (currentCount === 1) → ពិនិត្យ 1:01 PM
-                const scanNumber = currentCount + 1;
-                lateMinutes = calculateLateMinutes(scanNumber);
-                const lateTimeFormatted = formatLateTime(lateMinutes);
-
-                if (lateMinutes > 0) {
-                    const scanLabel = scanNumber === 2 ? 'ស្គេនដងទី2' : 'ស្គេនព្រឹក';
-                    lateStatus = `\n⚠️ <b>មកយឺត (${scanLabel}): ${lateTimeFormatted}</b>`;
-                    trackLateStaff(name, role, lateMinutes, time, scanNumber);
-                    isLate = true;
+                const lateMin = calcLate(scanNum);
+                const lateLabel = scanNum === 2 ? 'ស្គេនទី2 (PM)' : 'ស្គេនទី1 (AM)';
+                if (lateMin > 0) {
+                    lateStatus = `\n⚠️ <b>យឺត (${lateLabel}): ${fmtLate(lateMin)}</b>`;
                 } else {
-                    lateStatus = '\n✅ <b>មកទាន់ម៉ោង</b>';
-                    isLate = false;
-                }
-
-                // រក្សាទុកតែស្គេនដំបូងប៉ុណ្ណោះ
-                if (currentCount === 0) {
-                    addCheckinStaff(name, role, time, isLate);
+                    lateStatus = `\n✅ <b>មកទាន់ម៉ោង</b>`;
                 }
             }
 
-            const scanLabel = isCheckin ? `(ស្គេនដងទី ${currentCount + 1})` : '';
-            const message = `🏢 <b>របាយការណ៍វត្តមាន${dayLabel}</b>\n\n` +
-                            `👤 ឈ្មោះ: <b>${name}</b>\n` +
-                            `💼 តួនាទី: <b>${role}</b>\n` +
-                            `📞 លេខទូរស័ព្ទ: <code>${phone}</code>\n` +
-                            `📍 សកម្មភាព: <b>${type} ${scanLabel}</b>\n` +
-                            `⏰ ម៉ោង: <code>${time}</code>\n` +
-                            `📅 ថ្ងៃទី: <code>${date}</code>` +
-                            lateStatus;
+            const scanLabel = isCheckin ? ` (ស្គេនដងទី ${scanNum})` : '';
+            const msg = `🏢 <b>Staff Attendance</b>\n\n` +
+                `👤 ឈ្មោះ: <b>${name}</b>\n` +
+                `💼 តួនាទី: <b>${role}</b>\n` +
+                `📞 ទូរស័ព្ទ: <code>${phone}</code>\n` +
+                `📍 សកម្មភាព: <b>${type}${scanLabel}</b>\n` +
+                `⏰ ម៉ោង: <code>${time}</code>\n` +
+                `📅 ថ្ងៃទី: <code>${date}</code>` +
+                lateStatus;
 
-            await sendTelegramMessage(message);
-
-            incrementCount(countType);
+            await sendTelegram(msg);
+            incCount(countType);
             updateUI();
 
-            const lateText = lateMinutes > 0 ? ` (យឺត ${formatLateTime(lateMinutes)})` : '';
-            statusDiv.innerHTML = `<span style='color:green'>✅ កត់ត្រាជោគជ័យ!${lateText}</span>`;
+            const lateMin = isCheckin ? calcLate(scanNum) : 0;
+            statusDiv.innerHTML = `<span style='color:green'>✅ ${isCheckin ? 'Check-In' : 'Check-Out'} ជោគជ័យ!${lateMin > 0 ? ` (យឺត ${fmtLate(lateMin)})` : ''}</span>`;
 
-        } catch (error) {
-            statusDiv.innerHTML = `<span style='color:red'>❌ ${error.message}<br>សូមបើក GPS/Location</span>`;
+        } catch(e) {
+            statusDiv.innerHTML = `<span style='color:red'>❌ ${e.message}</span>`;
         }
     }
 </script>
-
 </body>
 </html>
