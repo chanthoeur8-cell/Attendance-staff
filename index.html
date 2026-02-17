@@ -36,6 +36,7 @@
     <div class="time-info" id="scheduleInfo">
         ⏰ ម៉ោងចូល: 7:00 AM<br>
         ⚠️ យឺតប្រសិនបើ Check-In លើសពី 7:05 AM<br>
+        🌙 ស្គេនដងទី2: យឺតចាប់ពី 1:01 PM<br>
         📊 របាយការណ៍ស្វ័យប្រវត្តិ: 8:50 AM
     </div>
     
@@ -63,92 +64,84 @@
     const TELEGRAM_BOT_TOKEN = '8242266919:AAGE6uMJ_-UvM-3KBZkJVFhJyTLvcTVW5tQ';
     const TELEGRAM_CHAT_ID = -1003584563383;
 
-    // ទីតាំងការិយាល័យ (Office Location)
     const OFFICE_LAT = 11.615808345753639;
     const OFFICE_LNG = 104.9076275084756;
-    const MAX_DISTANCE = 10000; // meters (10000m radius)
+    const MAX_DISTANCE = 10000;
 
-    // កាលវិភាគការងារ (Work Schedule)
     const SCHEDULE = {
-        weekday: { // ច័ន្ទ-សុក្រ
+        weekday: {
             workStartHour: 7,
             workStartMinute: 0,
-            lateStartHour: 7,      // ចាប់ផ្តើមគណនាយឺតពី 7:05 AM
+            // ស្គេនដំបូង: យឺតចាប់ពី 7:05 AM
+            lateStartHour: 7,
             lateStartMinute: 5,
+            // ស្គេនដងទី2: យឺតចាប់ពី 1:01 PM
+            lateStart2Hour: 13,
+            lateStart2Minute: 1,
             reportHour: 8,
             reportMinute: 50
         },
-        saturday: { // សៅរ៍
+        saturday: {
             workStartHour: 8,
             workStartMinute: 30,
-            lateStartHour: 8,      // យឺតភ្លាមៗ
+            lateStartHour: 8,
             lateStartMinute: 30,
+            // ស្គេនដងទី2 សៅរ៍: យឺតចាប់ពី 1:01 PM ដូចគ្នា
+            lateStart2Hour: 13,
+            lateStart2Minute: 1,
             reportHour: 9,
             reportMinute: 30
         }
     };
 
-    // ចំនួនបុគ្គលិកសរុប (Total Staff)
     const TOTAL_STAFF = 16;
 
-    // បញ្ជីឈ្មោះបុគ្គលិកទាំងអស់ (សូមប្តូរជាឈ្មោះពិតប្រាកដ)
     const ALL_STAFF_NAMES = [
-         "Chanthoeurn Chhoeurn", "Ashley villela", "វិន សេរីភាព", "ផុត​ ហ័ន",
+        "Chanthoeurn Chhoeurn", "Ashley villela", "វិន សេរីភាព", "ផុត​ ហ័ន",
         "មុឹង​ ស្រីនីត", "អឿន កាណាល់", "ប៉ូ សូឌិន", "Leang Sopheavy",
         "ចំណាន វាសនា", "Born Chhorda", "Sok sreypich", "Eng sreynin",
         "កុសល សៀកម៉េង", "វ៉ាត មួយសុាំង", "ឈឹមវ៉ាន លីហង្ស", "Dorn Sreyneth"
     ];
 
-    // ១. ពិនិត្យថ្ងៃនិងទទួលកាលវិភាគ
     function getTodaySchedule() {
         const today = new Date();
-        const dayOfWeek = today.getDay(); // 0=អាទិត្យ, 1=ច័ន្ទ, ..., 6=សៅរ៍
-        
-        if (dayOfWeek === 0) { // អាទិត្យ
-            return SCHEDULE.weekday; // ប្រើកាលវិភាគធម្មតា ប៉ុន្តែមិនផ្ញើរបាយការណ៍
-        } else if (dayOfWeek === 6) { // សៅរ៍
-            return SCHEDULE.saturday;
-        } else { // ច័ន្ទ-សុក្រ
-            return SCHEDULE.weekday;
-        }
+        const dayOfWeek = today.getDay();
+        if (dayOfWeek === 6) return SCHEDULE.saturday;
+        return SCHEDULE.weekday;
     }
     
-    // ២. ពិនិត្យថាតើត្រូវផ្ញើរបាយការណ៍ឬអត់
     function shouldSendReport() {
-        const dayOfWeek = new Date().getDay();
-        return dayOfWeek !== 0; // មិនផ្ញើរបាយការណ៍សម្រាប់ថ្ងៃអាទិត្យ
+        return new Date().getDay() !== 0;
     }
 
-    // ៣. ធ្វើបច្ចុប្បន្នភាពព័ត៌មានកាលវិភាគ
     function updateScheduleInfo() {
-        const schedule = getTodaySchedule();
-        if (!schedule) return;
-        
         const scheduleInfo = document.getElementById('scheduleInfo');
         const dayOfWeek = new Date().getDay();
         
-        if (dayOfWeek === 0) { // អាទិត្យ
+        if (dayOfWeek === 0) {
             scheduleInfo.innerHTML = `
                 ⏰ ម៉ោងចូល: 7:00 AM (ថ្ងៃអាទិត្យ)<br>
                 ⚠️ យឺតប្រសិនបើ Check-In លើសពី 7:05 AM<br>
+                🌙 ស្គេនដងទី2: យឺតចាប់ពី 1:01 PM<br>
                 📊 គ្មានរបាយការណ៍ស្វ័យប្រវត្តិ
             `;
-        } else if (dayOfWeek === 6) { // សៅរ៍
+        } else if (dayOfWeek === 6) {
             scheduleInfo.innerHTML = `
                 ⏰ ម៉ោងចូល: 8:30 AM (ថ្ងៃសៅរ៍)<br>
                 ⚠️ យឺតប្រសិនបើ Check-In លើសពី 8:30 AM<br>
+                🌙 ស្គេនដងទី2: យឺតចាប់ពី 1:01 PM<br>
                 📊 របាយការណ៍ស្វ័យប្រវត្តិ: 9:30 AM
             `;
-        } else { // ច័ន្ទ-សុក្រ
+        } else {
             scheduleInfo.innerHTML = `
                 ⏰ ម៉ោងចូល: 7:00 AM<br>
                 ⚠️ យឺតប្រសិនបើ Check-In លើសពី 7:05 AM<br>
+                🌙 ស្គេនដងទី2: យឺតចាប់ពី 1:01 PM<br>
                 📊 របាយការណ៍ស្វ័យប្រវត្តិ: 8:50 AM
             `;
         }
     }
 
-    // ៣. មុខងារទាញទិន្នន័យមកបង្ហាញវិញ (Load Data)
     window.onload = () => {
         document.getElementById('staffName').value = localStorage.getItem('s_name') || '';
         document.getElementById('staffRole').value = localStorage.getItem('s_role') || '';
@@ -160,18 +153,12 @@
         startAutoReportTimer();
     };
 
-    // ៤. មុខងាររក្សាទុកទិន្នន័យ (Save Data)
     function saveData() {
-        const name = document.getElementById('staffName').value;
-        const role = document.getElementById('staffRole').value;
-        const phone = document.getElementById('staffPhone').value;
-
-        localStorage.setItem('s_name', name);
-        localStorage.setItem('s_role', role);
-        localStorage.setItem('s_phone', phone);
+        localStorage.setItem('s_name', document.getElementById('staffName').value);
+        localStorage.setItem('s_role', document.getElementById('staffRole').value);
+        localStorage.setItem('s_phone', document.getElementById('staffPhone').value);
     }
 
-    // ៥. ពិនិត្យថ្ងៃថ្មី និង Reset ចំនួន
     function checkAndResetDaily() {
         const today = new Date().toDateString();
         const lastDate = localStorage.getItem('last_attendance_date');
@@ -180,28 +167,22 @@
             localStorage.setItem('checkin_count', '0');
             localStorage.setItem('checkout_count', '0');
             localStorage.setItem('last_attendance_date', today);
-            
-            // Reset late staff tracking
             localStorage.removeItem('late_staff_today');
             localStorage.removeItem('checkin_staff_list');
             localStorage.removeItem('late_summary_sent');
         }
     }
 
-    // ៦. ទាញចំនួនបច្ចុប្បន្ន
     function getCount(type) {
         const key = type === 'in' ? 'checkin_count' : 'checkout_count';
         return parseInt(localStorage.getItem(key) || '0');
     }
 
-    // ៧. កើនចំនួន
     function incrementCount(type) {
         const key = type === 'in' ? 'checkin_count' : 'checkout_count';
-        const current = getCount(type);
-        localStorage.setItem(key, (current + 1).toString());
+        localStorage.setItem(key, (getCount(type) + 1).toString());
     }
 
-    // ៨. ធ្វើបច្ចុប្បន្នភាព UI
     function updateUI() {
         const checkinCount = getCount('in');
         const checkoutCount = getCount('out');
@@ -212,261 +193,161 @@
         const inBtn = document.getElementById('inBtn');
         const outBtn = document.getElementById('outBtn');
         
-        if (checkinCount >= 2) {
-            inBtn.disabled = true;
-            inBtn.style.backgroundColor = '#ccc';
-        } else {
-            inBtn.disabled = false;
-            inBtn.style.backgroundColor = '#28a745';
-        }
+        inBtn.disabled = checkinCount >= 2;
+        inBtn.style.backgroundColor = checkinCount >= 2 ? '#ccc' : '#28a745';
         
-        if (checkoutCount >= 1) {
-            outBtn.disabled = true;
-            outBtn.style.backgroundColor = '#ccc';
-        } else {
-            outBtn.disabled = false;
-            outBtn.style.backgroundColor = '#007bff';
-        }
+        outBtn.disabled = checkoutCount >= 1;
+        outBtn.style.backgroundColor = checkoutCount >= 1 ? '#ccc' : '#007bff';
     }
 
-    // ៩. គណនាចម្ងាយរវាងពីរចំណុច (Haversine Formula)
     function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371e3; // Earth radius in meters
+        const R = 6371e3;
         const φ1 = lat1 * Math.PI / 180;
         const φ2 = lat2 * Math.PI / 180;
         const Δφ = (lat2 - lat1) * Math.PI / 180;
         const Δλ = (lon2 - lon1) * Math.PI / 180;
-
-        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                  Math.cos(φ1) * Math.cos(φ2) *
-                  Math.sin(Δλ/2) * Math.sin(Δλ/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-        return R * c; // Distance in meters
+        const a = Math.sin(Δφ/2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) ** 2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    // ១០. ទទួល GPS Location
     function getCurrentLocation() {
         return new Promise((resolve, reject) => {
-            if (!navigator.geolocation) {
-                reject(new Error('GPS មិនដំណើរការ'));
-                return;
-            }
-
+            if (!navigator.geolocation) { reject(new Error('GPS មិនដំណើរការ')); return; }
             navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    resolve({
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude,
-                        accuracy: position.coords.accuracy
-                    });
+                (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }),
+                (err) => {
+                    const msgs = { 1: 'Open GPS Location', 2: 'GPS មិនដំណើរការ', 3: 'GPS timeout' };
+                    reject(new Error(msgs[err.code] || 'មិនអាចរកទីតាំង'));
                 },
-                (error) => {
-                    let errorMsg = 'មិនអាចរកទីតាំង';
-                    if (error.code === 1) errorMsg = 'Open GPS Location';
-                    else if (error.code === 2) errorMsg = 'GPS មិនដំណើរការ';
-                    else if (error.code === 3) errorMsg = 'GPS timeout';
-                    reject(new Error(errorMsg));
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
-                }
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         });
     }
 
-    // ១១. គណនានាទីយឺត (Calculate Late Minutes)
-    function calculateLateMinutes() {
+    // ========== គណនានាទីយឺត ==========
+    // scanNumber: 1 = ស្គេនដំបូង (ព្រឹក), 2 = ស្គេនដងទី2 (រសៀល)
+    function calculateLateMinutes(scanNumber) {
         const schedule = getTodaySchedule();
-        if (!schedule) return 0;
-        
         const now = new Date();
         const lateStart = new Date();
-        // ប្រើម៉ោងចាប់ផ្តើមគណនាយឺត (ច័ន្ទ-សុក្រ: 7:05 AM, សៅរ៍: 8:30 AM)
-        lateStart.setHours(schedule.lateStartHour, schedule.lateStartMinute, 0, 0);
-        
+
+        if (scanNumber === 2) {
+            // ស្គេនដងទី2: យឺតចាប់ពី 1:01 PM
+            lateStart.setHours(schedule.lateStart2Hour, schedule.lateStart2Minute, 0, 0);
+        } else {
+            // ស្គេនដំបូង: យឺតចាប់ពី 7:05 AM (ឬ 8:30 AM សៅរ៍)
+            lateStart.setHours(schedule.lateStartHour, schedule.lateStartMinute, 0, 0);
+        }
+
         if (now > lateStart) {
-            const diffMs = now - lateStart;
-            const diffMins = Math.floor(diffMs / 60000);
-            return diffMins;
+            return Math.floor((now - lateStart) / 60000);
         }
         return 0;
     }
 
-    // ១២. បំប្លែននាទីទៅជាម៉ោង (Convert Minutes to Hours Format)
     function formatLateTime(minutes) {
         if (minutes === 0) return 'មកទាន់ម៉ោង';
-        
         const hours = Math.floor(minutes / 60);
         const mins = minutes % 60;
-        
-        if (hours === 0) {
-            return `${mins} នាទី`;
-        } else if (mins === 0) {
-            return `${hours} ម៉ោង`;
-        } else {
-            return `${hours} ម៉ោង ${mins} នាទី`;
-        }
+        if (hours === 0) return `${mins} នាទី`;
+        if (mins === 0) return `${hours} ម៉ោង`;
+        return `${hours} ម៉ោង ${mins} នាទី`;
     }
 
-    // ១៣. រក្សាទុកបុគ្គលិកយឺត (Track Late Staff)
-    function trackLateStaff(name, role, lateMinutes, time) {
+    function trackLateStaff(name, role, lateMinutes, time, scanNumber) {
         let lateStaff = JSON.parse(localStorage.getItem('late_staff_today') || '[]');
-        
         if (lateMinutes > 0) {
-            lateStaff.push({
-                name: name,
-                role: role,
-                lateMinutes: lateMinutes,
-                lateTime: formatLateTime(lateMinutes),
-                time: time
-            });
-            
+            lateStaff.push({ name, role, lateMinutes, lateTime: formatLateTime(lateMinutes), time, scanNumber });
             localStorage.setItem('late_staff_today', JSON.stringify(lateStaff));
         }
     }
 
-    // ១៤. រក្សាទុកបុគ្គលិកដែល Check-In
     function addCheckinStaff(name, role, time, isLate) {
         let checkinList = JSON.parse(localStorage.getItem('checkin_staff_list') || '[]');
-        
-        // ពិនិត្យថាតើមានរួចហើយឬនៅ
-        const exists = checkinList.find(s => s.name === name);
-        if (!exists) {
-            checkinList.push({
-                name: name,
-                role: role,
-                time: time,
-                isLate: isLate
-            });
-            
+        if (!checkinList.find(s => s.name === name)) {
+            checkinList.push({ name, role, time, isLate });
             localStorage.setItem('checkin_staff_list', JSON.stringify(checkinList));
         }
     }
 
-    // ១៥. ស្វែងរកបុគ្គលិកអវត្តមាន
     function getAbsentStaff() {
-        const checkinList = JSON.parse(localStorage.getItem('checkin_staff_list') || '[]');
-        const checkinNames = checkinList.map(s => s.name);
-        
-        // រកឃើញអ្នកដែលមិនបាន Check-In
-        const absentStaff = ALL_STAFF_NAMES.filter(name => !checkinNames.includes(name));
-        
-        return absentStaff;
+        const checkinNames = JSON.parse(localStorage.getItem('checkin_staff_list') || '[]').map(s => s.name);
+        return ALL_STAFF_NAMES.filter(name => !checkinNames.includes(name));
     }
 
-    // ១៦. Timer ផ្ញើរបាយការណ៍ស្វ័យប្រវត្តិ (Auto Report Timer)
     function startAutoReportTimer() {
-        const schedule = getTodaySchedule();
-        if (!schedule) return;
-        
-        // ពិនិត្យរៀងរាល់នាទី
         setInterval(() => {
-            // ពិនិត្យថាតើថ្ងៃនេះត្រូវផ្ញើរបាយការណ៍ឬអត់
             if (!shouldSendReport()) return;
-            
+            const schedule = getTodaySchedule();
             const now = new Date();
-            const currentHour = now.getHours();
-            const currentMinute = now.getMinutes();
-            
-            // ពិនិត្យថាតើដល់ម៉ោងផ្ញើរបាយការណ៍ហើយឬនៅ
-            if (currentHour === schedule.reportHour && currentMinute === schedule.reportMinute) {
-                // ពិនិត្យថាតើបានផ្ញើរួចហើយឬនៅ
-                const alreadySent = localStorage.getItem('late_summary_sent');
-                if (alreadySent !== 'true') {
+            if (now.getHours() === schedule.reportHour && now.getMinutes() === schedule.reportMinute) {
+                if (localStorage.getItem('late_summary_sent') !== 'true') {
                     sendLateStaffSummary();
                 }
             }
-        }, 60000); // ពិនិត្យរៀងរាល់ 1 នាទី
+        }, 60000);
     }
 
-    // ១៧. បញ្ជូនរបាយការណ៍បុគ្គលិកយឺត និង អវត្តមាន (Send Late & Absent Staff Summary)
     async function sendLateStaffSummary() {
-        // ពិនិត្យថាតើបានបញ្ជូនរួចហើយឬនៅ
-        if (localStorage.getItem('late_summary_sent') === 'true') {
-            return;
-        }
-
-        const schedule = getTodaySchedule();
-        if (!schedule) return;
+        if (localStorage.getItem('late_summary_sent') === 'true') return;
 
         const lateStaff = JSON.parse(localStorage.getItem('late_staff_today') || '[]');
         const checkinList = JSON.parse(localStorage.getItem('checkin_staff_list') || '[]');
         const absentStaff = getAbsentStaff();
-        
-        const today = new Date().toLocaleDateString('km-KH');
         const dayOfWeek = new Date().getDay();
         const dayName = dayOfWeek === 6 ? 'សៅរ៍' : 'ធម្មតា';
-        
+        const today = new Date().toLocaleDateString('km-KH');
+
         const totalPresent = checkinList.length;
         const totalLate = lateStaff.length;
         const totalAbsent = absentStaff.length;
         const totalOnTime = totalPresent - totalLate;
         const attendanceRate = ((totalPresent / TOTAL_STAFF) * 100).toFixed(1);
-        
+
         let message = `━━━━━━━━━━━━━━━━━━━\n`;
         message += `📊 <b>របាយការណ៍វត្តមាន ថ្ងៃ${dayName}</b>\n`;
         message += `📅 <b>${today}</b>\n`;
         message += `━━━━━━━━━━━━━━━━━━━\n\n`;
-        
         message += `👥 <b>សរុប:</b> ${TOTAL_STAFF} នាក់\n`;
         message += `✅ <b>វត្តមាន:</b> ${totalPresent} នាក់ (${attendanceRate}%)\n`;
         message += `❌ <b>អវត្តមាន:</b> ${totalAbsent} នាក់\n`;
         message += `⏰ <b>មកទាន់ម៉ោង:</b> ${totalOnTime} នាក់\n`;
         message += `⚠️ <b>មកយឺត:</b> ${totalLate} នាក់\n\n`;
-        
-        // បុគ្គលិកមកយឺត
+
         if (lateStaff.length > 0) {
             message += `━━━━━━━━━━━━━━━━━━━\n`;
             message += `⚠️ <b>បុគ្គលិកមកយឺត:</b>\n\n`;
-            
-            // តម្រៀបតាមនាទីយឺតច្រើនទៅតិច
             lateStaff.sort((a, b) => b.lateMinutes - a.lateMinutes);
-            
             lateStaff.forEach((staff, index) => {
                 const emoji = staff.lateMinutes > 120 ? '🔴' : staff.lateMinutes > 60 ? '🟡' : '🟠';
-                message += `${emoji} <b>${index + 1}. ${staff.name}</b>\n`;
+                const scanLabel = staff.scanNumber === 2 ? ' (ស្គេន២)' : ' (ស្គេន១)';
+                message += `${emoji} <b>${index + 1}. ${staff.name}</b>${scanLabel}\n`;
                 message += `   💼 តួនាទី: ${staff.role}\n`;
                 message += `   ⚠️ យឺត: <b>${staff.lateTime}</b>\n`;
                 message += `   🕐 មកដល់: ${staff.time}\n\n`;
             });
-            
             message += `🟠 < 1ម៉ោង | 🟡 1-2ម៉ោង | 🔴 > 2ម៉ោង\n`;
         } else {
             message += `━━━━━━━━━━━━━━━━━━━\n`;
             message += `✅ <b>ល្អប្រសើរ!</b> គ្មាននរណាមកយឺតទេ\n`;
         }
-        
-        // បុគ្គលិកអវត្តមាន
+
         if (absentStaff.length > 0) {
             message += `\n━━━━━━━━━━━━━━━━━━━\n`;
             message += `❌ <b>បុគ្គលិកអវត្តមាន (${totalAbsent} នាក់):</b>\n\n`;
-            
-            absentStaff.forEach((name, index) => {
-                message += `${index + 1}. ${name}\n`;
-            });
+            absentStaff.forEach((name, i) => { message += `${i+1}. ${name}\n`; });
         } else {
             message += `\n━━━━━━━━━━━━━━━━━━━\n`;
             message += `🎉 <b>ល្អឥតខ្ចោះ!</b> បុគ្គលិកទាំងអស់វត្តមាន\n`;
         }
-        
+
         await sendTelegramMessage(message);
-        
-        // កត់សម្គាល់ថាបានបញ្ជូនរួចហើយ
         localStorage.setItem('late_summary_sent', 'true');
     }
 
-    // ១៨. បញ្ជូនសារទៅ Telegram
     async function sendTelegramMessage(message) {
-        const encodedMessage = encodeURIComponent(message);
-        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${encodedMessage}&parse_mode=HTML`;
-
-        await fetch(url, {
-            method: 'GET',
-            mode: 'no-cors'
-        });
+        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${encodeURIComponent(message)}&parse_mode=HTML`;
+        await fetch(url, { method: 'GET', mode: 'no-cors' });
     }
 
     async function sendAttendance(type) {
@@ -480,12 +361,11 @@
             return;
         }
 
-        // ពិនិត្យដែនកំណត់
         const isCheckin = type.includes('Check-In');
         const countType = isCheckin ? 'in' : 'out';
         const maxLimit = isCheckin ? 2 : 1;
         const currentCount = getCount(countType);
-        
+
         if (currentCount >= maxLimit) {
             const limitText = isCheckin ? 'Check-In ២ដងរួច' : 'Check-Out ១ដងរួច';
             statusDiv.innerHTML = `<span style='color:orange'>⚠️ អ្នកបាន${limitText}ថ្ងៃនេះហើយ!</span>`;
@@ -495,70 +375,64 @@
         statusDiv.innerHTML = "<span style='color:#666'>⏳ កំពុងពិនិត្យទីតាំង...</span>";
 
         try {
-            // ទទួល GPS Location
             const userLocation = await getCurrentLocation();
-            
-            // គណនាចម្ងាយពីការិយាល័យ
-            const distance = calculateDistance(
-                OFFICE_LAT, OFFICE_LNG,
-                userLocation.lat, userLocation.lng
-            );
+            const distance = calculateDistance(OFFICE_LAT, OFFICE_LNG, userLocation.lat, userLocation.lng);
 
-            // ពិនិត្យថាតើនៅក្នុងរង្វង់ការិយាល័យឬអត់
             if (distance > MAX_DISTANCE) {
-                statusDiv.innerHTML = `<span style='color:red'>❌ អ្នកមិននៅក្នុងការិយាល័យ!<br>ចម្ងាយ: ${Math.round(distance)} ម៉ែត្រ<br>សូម scan QR នៅការិយាល័យ</span>`;
+                statusDiv.innerHTML = `<span style='color:red'>❌ អ្នកមិននៅក្នុងការិយាល័យ!<br>ចម្ងាយ: ${Math.round(distance)} ម៉ែត្រ</span>`;
                 return;
             }
 
-            // បញ្ជូនទៅ Telegram
             statusDiv.innerHTML = "<span style='color:#666'>⏳ កំពុងបញ្ជូន...</span>";
 
             const now = new Date();
             const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
             const date = now.toLocaleDateString('km-KH');
             const dayOfWeek = now.getDay();
-            const dayName = dayOfWeek === 6 ? 'សៅរ៍' : '';
-            
-            // គណនានាទីយឺត (សម្រាប់ Check-In តែប៉ុណ្ណោះ)
+            const dayLabel = dayOfWeek === 6 ? ' - សៅរ៍' : '';
+
             let lateMinutes = 0;
             let lateStatus = '';
             let isLate = false;
-            
-            if (isCheckin && currentCount === 0) { // Check-In ដំបូងតែប៉ុណ្ណោះ
-                lateMinutes = calculateLateMinutes();
+
+            if (isCheckin) {
+                // ស្គេនដំបូង (currentCount === 0) → ពិនិត្យ 7:05 AM
+                // ស្គេនដងទី2 (currentCount === 1) → ពិនិត្យ 1:01 PM
+                const scanNumber = currentCount + 1;
+                lateMinutes = calculateLateMinutes(scanNumber);
                 const lateTimeFormatted = formatLateTime(lateMinutes);
-                
+
                 if (lateMinutes > 0) {
-                    lateStatus = `\n⚠️ <b>មកយឺត: ${lateTimeFormatted}</b>`;
-                    trackLateStaff(name, role, lateMinutes, time);
+                    const scanLabel = scanNumber === 2 ? 'ស្គេនដងទី2' : 'ស្គេនព្រឹក';
+                    lateStatus = `\n⚠️ <b>មកយឺត (${scanLabel}): ${lateTimeFormatted}</b>`;
+                    trackLateStaff(name, role, lateMinutes, time, scanNumber);
                     isLate = true;
                 } else {
                     lateStatus = '\n✅ <b>មកទាន់ម៉ោង</b>';
                     isLate = false;
                 }
-                
-                // រក្សាទុកបុគ្គលិក Check-In
-                addCheckinStaff(name, role, time, isLate);
-            }
-            
-            const countDisplay = isCheckin ? `(ដងទី ${currentCount + 1})` : '';
-            const dayLabel = dayName ? ` - ${dayName}` : '';
 
+                // រក្សាទុកតែស្គេនដំបូងប៉ុណ្ណោះ
+                if (currentCount === 0) {
+                    addCheckinStaff(name, role, time, isLate);
+                }
+            }
+
+            const scanLabel = isCheckin ? `(ស្គេនដងទី ${currentCount + 1})` : '';
             const message = `🏢 <b>របាយការណ៍វត្តមាន${dayLabel}</b>\n\n` +
                             `👤 ឈ្មោះ: <b>${name}</b>\n` +
                             `💼 តួនាទី: <b>${role}</b>\n` +
                             `📞 លេខទូរស័ព្ទ: <code>${phone}</code>\n` +
-                            `📍 សកម្មភាព: <b>${type} ${countDisplay}</b>\n` +
+                            `📍 សកម្មភាព: <b>${type} ${scanLabel}</b>\n` +
                             `⏰ ម៉ោង: <code>${time}</code>\n` +
                             `📅 ថ្ងៃទី: <code>${date}</code>` +
                             lateStatus;
 
             await sendTelegramMessage(message);
 
-            // បញ្ជូនសំរេច
             incrementCount(countType);
             updateUI();
-            
+
             const lateText = lateMinutes > 0 ? ` (យឺត ${formatLateTime(lateMinutes)})` : '';
             statusDiv.innerHTML = `<span style='color:green'>✅ កត់ត្រាជោគជ័យ!${lateText}</span>`;
 
@@ -570,6 +444,3 @@
 
 </body>
 </html>
-
-
-
